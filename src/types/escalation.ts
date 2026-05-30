@@ -43,6 +43,7 @@ export type OnNoResponse = "next_step" | "stop";
  *                    (e.g. "Margaret", "Daughter — Sarah", "911").
  * `timeoutSeconds` — how long to wait at this step before applying onNoResponse.
  * `onNoResponse`   — `next_step` advances to the following step; `stop` halts.
+ * `phoneNumber`    — E.164 number to call/text when step activates (optional).
  */
 export interface EscalationStep {
   /** Stable id for React keys, reordering, and engine event correlation. */
@@ -51,6 +52,8 @@ export interface EscalationStep {
   target: string;
   timeoutSeconds: number;
   onNoResponse: OnNoResponse;
+  /** E.164 phone number for real Twilio calls (e.g. +14155551234). Optional. */
+  phoneNumber?: string;
 }
 
 /* ------------------------------------------------------------------ */

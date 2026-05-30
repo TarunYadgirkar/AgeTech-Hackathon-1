@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import './App.css'
 import { mockConfig } from './mocks'
 import { classify } from './lib/classify'
+import { notifyCall } from './lib/notify'
 import { runEscalation } from './engine/escalationMachine'
 import type { MachineHandle } from './engine/escalationMachine'
 import type { EscalationConfig, EscalationRuntimeEvent } from './types/escalation'
@@ -51,8 +52,21 @@ export default function App() {
 
   function handleStartEscalation() {
     if (!result) return
+    const incidentText = eventText
+    const tier = result.tier
     stopMachine()
-    machineRef.current = runEscalation(config, result.tier, (ev) => setRuntimeEvent(ev))
+    let lastFiredIndex: number | null = null
+    machineRef.current = runEscalation(config, tier, (ev) => {
+      setRuntimeEvent(ev)
+      if (ev.activeStepIndex !== null && ev.activeStepIndex !== lastFiredIndex) {
+        lastFiredIndex = ev.activeStepIndex
+        const step = config[tier].steps[ev.activeStepIndex]
+        if (step?.phoneNumber && (step.type === 'voice_call' || step.type === 'contact')) {
+          const msg = `Elder care alert. ${step.target} is being contacted. Incident: ${incidentText}. Please respond immediately.`
+          notifyCall(step.phoneNumber, msg).catch(console.error)
+        }
+      }
+    })
   }
 
   return (
