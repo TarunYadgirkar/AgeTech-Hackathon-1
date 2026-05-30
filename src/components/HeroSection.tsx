@@ -123,19 +123,6 @@ export default function HeroSection({ onGoToDashboard, onGoToScenario }: Props) 
               </button>
             </div>
 
-            {/* Mini stat strip */}
-            <div className="flex items-center gap-6 pt-2 border-t border-slate-100">
-              {[
-                { num: '28M', label: 'older adults living alone' },
-                { num: '3h+', label: 'avg. delay without automation' },
-                { num: '60%', label: 'fall victims wait alone' },
-              ].map(({ num, label }) => (
-                <div key={num}>
-                  <p className="text-lg font-bold text-slate-900">{num}</p>
-                  <p className="text-xs text-slate-400 leading-snug">{label}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Right — Spline or fallback */}

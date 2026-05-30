@@ -1,33 +1,61 @@
+import type { ReactNode } from 'react'
+
 const STATS = [
   {
-    num: '28M',
+    num: '14.7M',
     label: 'Older adults living alone',
-    detail: 'In the US alone, with no immediate person to check on them when something goes wrong.',
+    detail: 'In the US (Census 2020). No immediate person nearby when something goes wrong.',
   },
   {
-    num: '3+ hrs',
-    label: 'Delayed escalation',
-    detail: 'The average time for emergency help to reach an isolated senior after a fall, when no automated alert exists.',
+    num: '3M+',
+    label: 'ER visits from fall injuries',
+    detail: 'Per year in adults 65+, making falls the leading cause of injury death among older adults (CDC).',
   },
   {
-    num: '1 in 3',
-    label: 'Caregiver uncertainty',
-    detail: 'Seniors who fall do not call for help, leaving caregivers unaware until the situation becomes critical.',
+    num: '1 in 4',
+    label: 'Older adults fall each year',
+    detail: 'Yet fewer than half report it to their doctor, leaving caregivers unaware until things become critical (CDC, NCOA).',
   },
 ]
 
-const PROBLEM_CARDS = [
+interface ProblemCard {
+  title: string
+  body: string
+  iconBg: string
+  icon: ReactNode
+}
+
+const PROBLEM_CARDS: ProblemCard[] = [
   {
     title: 'Sensors see it. No one acts.',
     body: 'Smart home devices and wearables have become remarkably good at detecting falls, irregular patterns, and inactivity. But detection alone does not make anyone safe. The gap between a sensor firing and a human confirming a person is okay has remained largely unaddressed.',
+    iconBg: 'bg-blue-600',
+    icon: (
+      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
   },
   {
     title: 'Emergencies are rarely clear-cut.',
     body: 'When an older adult says they feel dizzy, haven\'t gotten up yet, or their curtains haven\'t opened, that information is ambiguous. Caregivers can\'t always assess severity from a text notification, and response is inconsistent as a result.',
+    iconBg: 'bg-amber-500',
+    icon: (
+      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+      </svg>
+    ),
   },
   {
     title: 'Manual coordination fails under pressure.',
     body: 'When something happens at 2 AM, a family member scrambling to call through a contacts list is not a reliable response plan. Without a structured escalation procedure, critical time is lost. The people who need to respond are often the last to know.',
+    iconBg: 'bg-red-600',
+    icon: (
+      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+      </svg>
+    ),
   },
 ]
 
@@ -113,12 +141,10 @@ export default function OverviewPage({ onScenarioSelect }: Props) {
           </div>
 
           <div className="grid grid-cols-3 gap-5">
-            {PROBLEM_CARDS.map(({ title, body }) => (
+            {PROBLEM_CARDS.map(({ title, body, iconBg, icon }) => (
               <div key={title} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3 shadow-sm">
-                <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                  </svg>
+                <div className={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center`}>
+                  {icon}
                 </div>
                 <h3 className="text-base font-semibold text-slate-900">{title}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{body}</p>
@@ -210,7 +236,7 @@ export default function OverviewPage({ onScenarioSelect }: Props) {
           <div className="space-y-5">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-slate-900">Try a scenario on the dashboard</h3>
-              <p className="text-sm text-slate-400">Click to load the incident text, then classify with AI to see the full response run.</p>
+              <p className="text-sm text-slate-400">Click to load the incident text into the dashboard, then classify with AI to see the full response run.</p>
             </div>
             <div className="grid grid-cols-3 gap-4">
               {LOAD_SCENARIOS.map(({ label, tier, tierColor, description, text }) => (
