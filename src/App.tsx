@@ -36,10 +36,9 @@ export default function App() {
     setRuntimeEvent(null)
   }
 
-  async function handleClassify(text?: string) {
-    const input = (text ?? eventText).trim()
+  async function handleClassify() {
+    const input = eventText.trim()
     if (!input || classifying) return
-    if (text) setEventText(text)
     setClassifying(true)
     setClassifyError(null)
     setResult(null)
@@ -88,8 +87,8 @@ export default function App() {
         <Dashboard
           eventText={eventText}
           setEventText={setEventText}
-          onClassify={() => handleClassify()}
-          onScenarioSelect={(text) => handleClassify(text)}
+          onClassify={handleClassify}
+          onScenarioSelect={(text) => { setEventText(text); stopMachine(); setResult(null) }}
           classifying={classifying}
           classifyError={classifyError}
           result={result}
