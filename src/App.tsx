@@ -186,19 +186,8 @@ export default function App() {
                 config={config}
                 onRespond={() => machineRef.current?.respond()}
                 onStop={stopMachine}
+                callNotice={callNotice}
               />
-            )}
-
-            {/* Live call status notice */}
-            {callNotice && (
-              <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm border ${
-                callNotice.ok
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : 'bg-red-50 border-red-200 text-red-800'
-              }`}>
-                <span className={`w-2 h-2 rounded-full shrink-0 ${callNotice.ok ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                {callNotice.msg}
-              </div>
             )}
 
             <StepEditor

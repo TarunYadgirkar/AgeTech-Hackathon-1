@@ -69,9 +69,10 @@ interface Props {
   config: EscalationConfig
   onRespond: () => void
   onStop: () => void
+  callNotice?: { ok: boolean; msg: string } | null
 }
 
-export default function EscalationView({ event, config, onRespond, onStop }: Props) {
+export default function EscalationView({ event, config, onRespond, onStop, callNotice }: Props) {
   const { tier, runStatus, activeStepIndex, steps } = event
   const procedure = config[tier]
   const is911 = runStatus === 'at_911_intent'
@@ -122,6 +123,18 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
         </div>
       )}
 
+      {/* Live call notice */}
+      {callNotice && (
+        <div className={`mx-6 mt-4 flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm border ${
+          callNotice.ok
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${callNotice.ok ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+          <span>{callNotice.msg}</span>
+        </div>
+      )}
+
       {/* Step timeline */}
       <div className="p-6 space-y-2">
         {steps.map((runtimeStep, idx) => {
@@ -129,6 +142,8 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
           if (!def) return null
           const c = STATUS_CONFIG[runtimeStep.status]
           const isActiveStep = idx === activeStepIndex && runStatus === 'running'
+          const needsPhone = def.type !== 'call_911'
+          const hasPhone = Boolean(def.phoneNumber)
 
           return (
             <div
@@ -141,6 +156,11 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium truncate ${c.text}`}>{def.target}</p>
                 <p className={`text-xs ${c.sub}`}>{STEP_TYPE_LABEL[def.type] ?? def.type}</p>
+                {needsPhone && (
+                  <p className={`text-xs mt-0.5 font-medium ${hasPhone ? 'text-emerald-600' : 'text-amber-500'}`}>
+                    {hasPhone ? `Calling ${def.phoneNumber}` : 'No phone number — set one in Escalation Procedure'}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2.5 shrink-0">
                 {isActiveStep && runtimeStep.remainingSeconds !== null && (
