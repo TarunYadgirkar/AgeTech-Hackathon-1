@@ -33,16 +33,20 @@ async function callModel(
     contents: text,
     config: {
       systemInstruction: SYSTEM_PROMPT,
-      maxOutputTokens: 256,
-      responseMimeType: 'application/json',
+      maxOutputTokens: 512,
+      thinkingConfig: { thinkingBudget: 0 },
     },
   });
 
-  const raw = JSON.parse(response.text ?? '') as unknown;
+  const raw_text = response.text ?? '';
+  // Extract JSON object from response (handles any wrapping text from thinking models)
+  const match = raw_text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('no JSON in response');
+  const raw = JSON.parse(match[0]) as unknown;
   if (typeof raw !== 'object' || raw === null) throw new Error('non-object response');
 
   const { tier, reasoning } = raw as Record<string, unknown>;
-  if (typeof tier !== 'string' || !VALID_TIERS.has(tier)) throw new Error('invalid tier');
+  if (typeof tier !== 'string' || !VALID_TIERS.has(tier)) throw new Error(`invalid tier: ${String(tier)}`);
   if (typeof reasoning !== 'string' || !reasoning.trim()) throw new Error('empty reasoning');
 
   return { tier: tier as SeverityTier, reasoning };
@@ -73,8 +77,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (e) {
       lastErr = e;
       console.error(`[classify] ${model} failed:`, e instanceof Error ? e.message : e);
-      if (isRateLimit(e)) continue;
-      break;
     }
   }
   if (isRateLimit(lastErr)) {
