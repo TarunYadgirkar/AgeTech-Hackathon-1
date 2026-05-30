@@ -51,8 +51,8 @@ export function runEscalation(
   function advance(index: number) {
     if (dead) return;
     if (index >= steps.length) {
-      dead = true;
       emit('completed', null);
+      dead = true;
       return;
     }
 
@@ -62,8 +62,8 @@ export function runEscalation(
     if (step.type === 'call_911') {
       states[index].status = 'active';
       states[index].remainingSeconds = null;
-      dead = true;
       emit('at_911_intent', index);
+      dead = true;
       return;
     }
 
@@ -90,8 +90,8 @@ export function runEscalation(
       if (step.onNoResponse === 'next_step') {
         advance(index + 1);
       } else {
-        dead = true;
         emit('stopped', null);
+        dead = true;
       }
     }, step.timeoutSeconds * 1000);
   }
@@ -102,20 +102,20 @@ export function runEscalation(
     stop() {
       if (dead) return;
       clearTimers();
-      dead = true;
       states[activeIndex].status = 'timed_out';
       states[activeIndex].remainingSeconds = null;
       skipFrom(activeIndex + 1);
       emit('stopped', null);
+      dead = true;
     },
     respond() {
       if (dead) return;
       clearTimers();
-      dead = true;
       states[activeIndex].status = 'responded';
       states[activeIndex].remainingSeconds = null;
       skipFrom(activeIndex + 1);
       emit('completed', null);
+      dead = true;
     },
   };
 }
