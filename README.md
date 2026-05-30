@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="[https://drive.google.com/uc?export=view&id=1jl2rQ_PbFU4Seex_QdK4KFGn_X5o9_Gh](https://drive.google.com/file/d/10-bE2WsUnvX3Nad-tlX639duf-PZXzXC/view)" alt="Trustgate logo" width="150" />
+    <img src="https://drive.google.com/uc?export=view&id=1jl2rQ_PbFU4Seex_QdK4KFGn_X5o9_Gh" alt="Trustgate logo" width="150" />
 # GuardianAlert
 
 **An intelligent escalation layer for elder-care detection systems** that accepts a free-text "something's off" event, classifies it with AI into a severity tier — minor, medium, or major — with **visible reasoning**, then runs a **user-configured escalation procedure** step by step with live timers until a human takes ownership.
