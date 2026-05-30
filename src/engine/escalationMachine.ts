@@ -9,6 +9,7 @@ import type {
 export interface MachineHandle {
   stop(): void;
   respond(): void;
+  advanceStep(): void;
 }
 
 export function runEscalation(
@@ -116,6 +117,19 @@ export function runEscalation(
       skipFrom(activeIndex + 1);
       emit('completed', null);
       dead = true;
+    },
+    advanceStep() {
+      if (dead) return;
+      clearTimers();
+      states[activeIndex].status = 'timed_out';
+      states[activeIndex].remainingSeconds = null;
+      const step = steps[activeIndex];
+      if (step.onNoResponse === 'next_step') {
+        advance(activeIndex + 1);
+      } else {
+        emit('stopped', null);
+        dead = true;
+      }
     },
   };
 }

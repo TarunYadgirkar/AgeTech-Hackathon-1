@@ -19,6 +19,7 @@ export async function notifyCall(to: string, message: string): Promise<string | 
 export async function pollCallResponse(
   sid: string,
   onAnswered: () => void,
+  onNotAnswered: () => void,
   signal: AbortSignal,
 ): Promise<void> {
   while (!signal.aborted) {
@@ -32,7 +33,10 @@ export async function pollCallResponse(
         onAnswered();
         return;
       }
-      if (TERMINAL_STATUSES.has(status)) return;
+      if (TERMINAL_STATUSES.has(status)) {
+        onNotAnswered();
+        return;
+      }
     } catch {
       // transient — keep polling
     }

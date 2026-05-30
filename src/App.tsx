@@ -70,9 +70,12 @@ export default function App() {
           pollAbortRef.current = ac
           notifyCall(step.phoneNumber, msg).then(sid => {
             if (sid && !ac.signal.aborted) {
-              pollCallResponse(sid, () => {
-                if (!ac.signal.aborted) machineRef.current?.respond()
-              }, ac.signal).catch(console.error)
+              pollCallResponse(
+                sid,
+                () => { if (!ac.signal.aborted) machineRef.current?.respond() },
+                () => { if (!ac.signal.aborted) machineRef.current?.advanceStep() },
+                ac.signal,
+              ).catch(console.error)
             }
           }).catch(console.error)
         }
