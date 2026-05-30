@@ -1,7 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { ClassifierResult } from '../src/types/classifier';
-import type { SeverityTier } from '../src/types/escalation';
+
+type SeverityTier = 'minor' | 'medium' | 'major';
+interface ClassifierResult { tier: SeverityTier; reasoning: string; }
 
 const SYSTEM_PROMPT =
   'You are a triage classifier for an elder-care escalation system. You receive a ' +
