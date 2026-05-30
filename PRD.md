@@ -2,7 +2,7 @@
 
 **Event:** AgeTech SF Hackathon: Closing the Emergency Detection Gap
 **Date:** Saturday, May 30, 2026, 9AM–6PM · Downtown San Francisco
-**Team:** 2 people, one build day
+**Team:** 3 people, one build day
 **Status:** Build plan LOCKED
 
 ---
@@ -90,38 +90,45 @@ The **emergency contact** (family member or caregiver), via a caregiver-style da
 
 ---
 
-# Part 3 — Build Sequence (Two Parallel Tracks)
+# Part 3 — Build Sequence (Three Parallel Tracks)
 
 ## Phase 0 — Lock the seam (together, ~45 min)
 
-**Both people, first thing.** Build and agree on `src/types/escalation.ts` (artifact #3) AND the classifier output shape. This is the contract. Nothing else starts until these types compile and both people have read them. The schema ships with **mock fixtures** so Person B can build the entire UI against fake data without waiting on the engine.
+**All three people, first thing.** Build and agree on `src/types/escalation.ts` AND the classifier output shape. This is the contract. Nothing else starts until these types compile and all three people have read them. The schema ships with **mock fixtures** so B and C can build the entire UI and visualization against fake data without waiting on the engine.
 
-**Acceptance:** types compile; a `mockConfig` and `mockClassifierResult` are exported and importable; both people can `import` the types in a scratch file with no errors.
+**Acceptance:** types compile; `mockConfig`, `mockClassifierResult`, and `mockRuntimeSequence` are exported and importable; all three can `import` the types in a scratch file with no errors.
 
 ## Phase 1 — Parallel build (until midday integration)
 
 ### Track A — Logic (Person A: knows Claude Code)
 - A1. Vercel serverless proxy `/api/classify`: reads key from env, calls Sonnet, returns `{ tier, reasoning }` JSON. Haiku fallback path on error/timeout.
 - A2. Classifier client wrapper: typed `classify(text): Promise<ClassifierResult>`.
-- A3. Escalation state machine: pure module that takes an `EscalationConfig` + a tier, walks the step array with timers, emits step-state events. No UI, no hardcoded flows.
-- A4. Drive A3 from a test harness (console or a throwaway page) against `mockConfig`.
+- A3. Escalation state machine: pure module that takes an `EscalationConfig` + a tier, walks the step array with timers, emits `EscalationRuntimeEvent`s. No UI, no hardcoded flows.
+- A4. Drive A3 from a test harness (console or throwaway page) against `mockConfig`.
 
 **Acceptance (A):** `curl`-ing the deployed function with a sample sentence returns valid `{tier,reasoning}`; the state machine, fed `mockConfig`, emits the correct ordered step transitions with timeouts in a console log.
 
-### Track B — UI (Person B: newer to Claude Code)
+### Track B — UI + Dashboard (Person B: newer to Claude Code)
 - B1. App shell + Tailwind theme + Spline hero (lazy-loaded, with a static fallback).
 - B2. Caregiver dashboard layout from the Figma screenshot.
 - B3. Step-list editor: add/remove/reorder steps, edit `type / target / timeoutSeconds / onNoResponse`, per tier. Built entirely against `mockConfig`.
-- B4. Live escalation visualization: renders the step sequence with active-step highlight and countdown timers, driven by **stubbed** step-state events shaped like A3's output.
 
-**Acceptance (B):** dashboard renders and edits `mockConfig` in state; the visualization animates a stubbed escalation end-to-end including a shown "calling 911" state — all without the real engine.
+**Acceptance (B):** dashboard renders and edits `mockConfig` in state; step editor correctly adds/removes/reorders steps for all three tiers — all without the real engine.
+
+### Track C — Mocks + EscalationView + QA (Person C)
+- C1. **First and immediately after Phase 0:** write `src/mocks/index.ts` exporting `mockConfig`, `mockClassifierResult`, and `mockRuntimeSequence` — this unblocks B's dashboard work.
+- C2. `EscalationView` component: renders the active tier's steps as a vertical timeline with active-step highlight and countdown timers. Driven entirely by `mockRuntimeSequence` stubs. Do not touch the state machine.
+- C3. Demo scenario strings: 6–8 judge-ready input strings covering all three tiers (see `docs/demo-scenarios.md`).
+- C4. UI copy: button labels, status messages, "calling 911" state label, empty/error states.
+
+**Acceptance (C):** `EscalationView` animates the full `mockRuntimeSequence` end-to-end including the shown "calling 911" state — entirely off mocks. Mocks are importable by B immediately after Phase 0.
 
 ## Phase 2 — INTEGRATION POINT (together, midday, ~60 min)
 
 Wire the real pieces to the real UI:
-- Replace B4's stubbed events with A3's real state-machine events.
-- Replace any mock classify call with A2's real `classify()` hitting the deployed proxy.
-- Confirm the edited config from B3 is what the engine actually executes.
+- Replace C's stubbed events in `EscalationView` with A's real state-machine events.
+- Replace any mock classify call with A's real `classify()` hitting the deployed proxy.
+- Confirm the edited config from B's step editor is what the engine actually executes.
 
 **Acceptance (integration):** judge-typed sentence → real classification with visible reasoning → the **user-edited** procedure for that tier runs with live timers → major path reaches shown 911 state. End-to-end, no mocks.
 
@@ -130,6 +137,7 @@ Wire the real pieces to the real UI:
 - Pre-load 3 demo scenarios (one per tier) as one-click buttons (input still editable).
 - Tune timeouts so the demo reads well on stage (short enough to watch, long enough to narrate).
 - Visual polish, empty/error states, the 911 intent styling.
+- C runs full end-to-end QA across all three scenarios; A and B fix what breaks.
 - Rehearse the 2-minute demo + pitch. Lock a known-good config.
 
 **Acceptance (demo-ready):** a cold run of all three scenarios works back-to-back; the severity contrast is visually obvious; nothing on screen can trigger a real phone call.
@@ -138,13 +146,13 @@ Wire the real pieces to the real UI:
 
 # Part 4 — File / Module Ownership Map
 
-Designed so A and B rarely touch the same file.
+Designed so A, B, and C rarely touch the same file.
 
 | Path | Owner | Notes |
 |------|-------|-------|
-| `src/types/escalation.ts` | **Shared (Phase 0)** | Frozen after Phase 0. Changes require both to agree. |
+| `src/types/escalation.ts` | **Shared (Phase 0)** | Frozen after Phase 0. Changes require all three to agree. |
 | `src/types/classifier.ts` | **Shared (Phase 0)** | Classifier output shape + mock result. |
-| `src/mocks/` | **Shared (Phase 0)** | `mockConfig`, `mockClassifierResult`, stubbed step events. |
+| `src/mocks/index.ts` | **C** | First task after Phase 0. Unblocks B. |
 | `api/classify.ts` | A | Vercel serverless proxy. |
 | `src/lib/classify.ts` | A | Client wrapper around the proxy. |
 | `src/engine/escalationMachine.ts` | A | State machine. Pure, no React. |
@@ -153,33 +161,45 @@ Designed so A and B rarely touch the same file.
 | `src/components/Hero*` | B | Spline hero + fallback. |
 | `src/components/Dashboard*` | B | Caregiver dashboard. |
 | `src/components/StepEditor*` | B | Step-list editor. |
-| `src/components/EscalationView*` | B | Live visualization. |
+| `src/components/EscalationView*` | **C** | Live visualization. C builds against mocks; wires to engine at Phase 2. |
 | `tailwind.config.js`, `index.css` | B | Theme. |
 | `CLAUDE.md`, `.claude/skills/**` | A | Repo conventions + skills. |
+| `docs/demo-scenarios.md` | C | Demo scenario strings + pitch script. |
 
-**Integration seam:** the only file both edit is wherever the dashboard hands its config to the engine and renders engine events — keep that to a single thin container component (B owns it; A pairs during Phase 2).
+**Integration seam:** the only file all three touch is the thin container component where the dashboard hands config to the engine and renders `EscalationView` events — B owns it; A and C pair during Phase 2.
 
 ---
 
-# Part 5 — Claude Code First Tasks for Person B
+# Part 5 — Claude Code First Tasks by Person
 
-Self-contained, visual, against the agreed types — no dependency on Person A's code.
+## Person A — first tasks
+1. Read `CLAUDE.md` and `.claude/skills/classifier/SKILL.md`. Build `api/classify.ts` against the classifier skill spec.
+2. Build `src/lib/classify.ts` — typed client wrapper.
+3. Build `src/engine/escalationMachine.ts` — pure state machine against the types. Drive it with a console harness against `mockConfig`.
 
-1. **App shell + theme.** Scaffold the Vite app, set up the Tailwind theme tokens from the Figma reference, and add a top-level layout (hero region + dashboard region). Ship a plain styled page first.
-2. **Spline hero, lazy-loaded.** Drop the Spline scene into the hero region behind a `React.lazy` boundary with a static gradient/illustration fallback, so the page is never blank if the 3D asset is slow or fails.
-3. **Step-list editor against `mockConfig`.** Build the per-tier editor: list the steps, allow add/remove/reorder, and edit each field (`type`, `target`, `timeoutSeconds`, `onNoResponse`). Read and write `mockConfig` in local state. No engine needed.
-4. **Escalation visualization against stubbed events.** Render the active tier's steps as a vertical timeline; highlight the current step and show a countdown; advance through a hardcoded stub sequence (including the shown "calling 911" state). This becomes the real view once A's events are wired in Phase 2.
+## Person B — first tasks
+1. Read `CLAUDE.md` and `src/types/escalation.ts`. Build the app shell + Tailwind theme.
+2. Spline hero behind `React.lazy` with a static gradient fallback.
+3. Caregiver dashboard layout (Figma reference → Claude Code).
+4. Step-list editor against `mockConfig` — add/remove/reorder/edit steps per tier.
 
-> Tell Claude Code to read `CLAUDE.md` and `src/types/escalation.ts` before starting any task. Keep each task in its own files per the ownership map.
+> Wait ~15 min after Phase 0 for C to ship `src/mocks/index.ts` before starting the dashboard — it's a fast task and unblocks everything.
+
+## Person C — first tasks
+1. **Immediately after Phase 0:** write `src/mocks/index.ts`. Export `mockConfig`, `mockClassifierResult`, and `mockRuntimeSequence`. This is the first thing that ships and unblocks B.
+2. Build `EscalationView` component: vertical step timeline, active-step highlight, countdown timer, shown "calling 911" state. Build entirely against `mockRuntimeSequence`.
+3. Write 6–8 demo scenario input strings (see `docs/demo-scenarios.md`), one-click buttons for minor/medium/major.
+4. Write all UI copy: button labels, tier badge labels, status messages, empty/error states, "calling 911" label.
 
 ---
 
 # Acceptance Criteria Summary
 
 | Milestone | Done when… |
-|-----------|-----------|
-| Phase 0 — Schema | Types compile; mocks exported; both can import cleanly. |
+|-----------|------------|
+| Phase 0 — Schema | Types compile; mocks exported; all three can import cleanly. |
 | Track A | Proxy returns valid `{tier,reasoning}`; engine emits correct ordered transitions on `mockConfig`. |
-| Track B | Dashboard edits `mockConfig`; visualization animates a full stubbed escalation incl. shown 911. |
+| Track B | Dashboard edits `mockConfig`; step editor works across all three tiers. |
+| Track C | `EscalationView` animates full stubbed escalation incl. shown 911; mocks importable immediately after Phase 0. |
 | Integration | Typed sentence → real classification + reasoning → user-edited procedure runs with timers → major reaches shown 911. End-to-end, no mocks. |
 | Demo-ready | All 3 scenarios run back-to-back cold; severity contrast obvious; no path can dial a real phone. |
