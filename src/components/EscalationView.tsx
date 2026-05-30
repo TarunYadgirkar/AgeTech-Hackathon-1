@@ -77,6 +77,12 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
   const is911 = runStatus === 'at_911_intent'
   const isDone = is911 || runStatus === 'completed' || runStatus === 'stopped'
 
+  const activeStepDef = activeStepIndex !== null ? procedure.steps[activeStepIndex] : null
+  const respondLabel =
+    activeStepDef?.type === 'voice_call' ? 'They picked up, they\'re OK'
+    : activeStepDef?.type === 'contact'  ? 'Contact confirmed they\'re OK'
+    : 'Mark as Responded'
+
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
@@ -98,7 +104,7 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
             onClick={onStop}
             className="text-xs text-slate-400 hover:text-red-600 transition-colors px-3 py-1.5 border border-transparent hover:border-red-200 hover:bg-red-50 rounded-lg"
           >
-            Abort
+            Stop
           </button>
         )}
       </div>
@@ -161,7 +167,7 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
-            Mark as Responded
+            {respondLabel}
           </button>
           <button
             onClick={onStop}

@@ -195,15 +195,15 @@ export const mockConfig: EscalationConfig = {
     steps: [
       {
         id: "major_1",
-        type: "contact",
-        target: "Sarah (daughter)",
+        type: "voice_call",
+        target: "Margaret",
         timeoutSeconds: 7,
         onNoResponse: "next_step",
       },
       {
         id: "major_2",
-        type: "voice_call",
-        target: "Margaret",
+        type: "contact",
+        target: "Sarah (daughter)",
         timeoutSeconds: 7,
         onNoResponse: "next_step",
       },

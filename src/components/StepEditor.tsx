@@ -13,13 +13,13 @@ import {
 const RECOMMENDED: Record<SeverityTier, StepType[]> = {
   minor:  ['voice_call', 'contact'],
   medium: ['voice_call', 'contact', 'contact'],
-  major:  ['contact', 'voice_call', 'call_911'],
+  major:  ['voice_call', 'contact', 'call_911'],
 }
 
 const RECOMMENDED_LABEL: Record<SeverityTier, string> = {
   minor:  'AI Voice Call → Notify Contact',
   medium: 'AI Voice Call → Notify Contact → Notify Contact',
-  major:  'Notify Contact → AI Voice Call → Call 911',
+  major:  'AI Voice Call → Notify Contact → Call 911',
 }
 
 function matchesRecommended(steps: EscalationStep[], tier: SeverityTier): boolean {
@@ -87,11 +87,12 @@ export default function StepEditor({ config, setConfig, focusTier }: Props) {
   }
 
   function addStep() {
+    const hasVoiceCall = procedure.steps.some(s => s.type === 'voice_call')
     const step: EscalationStep = {
       id: makeStepId(),
-      type: 'contact',
-      target: 'Emergency Contact',
-      timeoutSeconds: 45,
+      type: hasVoiceCall ? 'contact' : 'voice_call',
+      target: hasVoiceCall ? 'Emergency Contact' : 'Margaret',
+      timeoutSeconds: 8,
       onNoResponse: 'next_step',
     }
     updateProcedure({ ...procedure, steps: [...procedure.steps, step] })
