@@ -32,14 +32,16 @@ export default function App() {
     setRuntimeEvent(null)
   }
 
-  async function handleClassify() {
-    if (!eventText.trim() || classifying) return
+  async function handleClassify(text?: string) {
+    const input = (text ?? eventText).trim()
+    if (!input || classifying) return
+    if (text) setEventText(text)
     setClassifying(true)
     setClassifyError(null)
     setResult(null)
     stopMachine()
     try {
-      setResult(await classify(eventText))
+      setResult(await classify(input))
     } catch (e) {
       setClassifyError(e instanceof Error ? e.message : 'Classification failed')
     } finally {
@@ -60,7 +62,8 @@ export default function App() {
         <Dashboard
           eventText={eventText}
           setEventText={setEventText}
-          onClassify={handleClassify}
+          onClassify={() => handleClassify()}
+          onScenarioSelect={(text) => handleClassify(text)}
           classifying={classifying}
           classifyError={classifyError}
           result={result}
