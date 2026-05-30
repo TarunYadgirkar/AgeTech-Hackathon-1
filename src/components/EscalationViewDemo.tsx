@@ -1,69 +1,131 @@
 import { useState, useEffect, useRef } from 'react';
 import { EscalationView } from './EscalationView';
-import { mockConfig, mockRuntimeSequence } from '../mocks';
-import type { EscalationRuntimeEvent, SeverityTier } from '../types/escalation';
+import { mockConfig } from '../mocks';
+import type {
+  EscalationRuntimeEvent,
+  StepRuntimeState,
+  SeverityTier,
+  TierProcedure,
+} from '../types/escalation';
 
 const TIERS: SeverityTier[] = ['minor', 'medium', 'major'];
 
-const IDLE_EVENT = (tier: SeverityTier): EscalationRuntimeEvent => ({
-  tier,
-  runStatus: 'idle',
-  activeStepIndex: null,
-  steps: mockConfig[tier].steps.map((s) => ({
+function idleEvent(tier: SeverityTier): EscalationRuntimeEvent {
+  return {
+    tier,
+    runStatus: 'idle',
+    activeStepIndex: null,
+    steps: mockConfig[tier].steps.map((s) => ({
+      stepId: s.id,
+      status: 'pending',
+      remainingSeconds: null,
+    })),
+  };
+}
+
+// Builds a sequence of EscalationRuntimeEvent frames for any TierProcedure.
+// Each step gets 3 frames: active-full → active-half → timed_out → advance.
+// Respects onNoResponse (stop halts, next_step continues), call_911 → at_911_intent.
+function buildSequence(procedure: TierProcedure): EscalationRuntimeEvent[] {
+  const { tier, steps } = procedure;
+  const frames: EscalationRuntimeEvent[] = [];
+
+  const states: StepRuntimeState[] = steps.map((s) => ({
     stepId: s.id,
     status: 'pending',
     remainingSeconds: null,
-  })),
-});
+  }));
 
-// Step through mockRuntimeSequence, one frame per second.
-export function EscalationViewDemo() {
-  const [tier, setTier] = useState<SeverityTier>('major');
-  const [event, setEvent] = useState<EscalationRuntimeEvent>(() => IDLE_EVENT('major'));
-  const [running, setRunning] = useState(false);
-  const frameRef = useRef(0);
+  const snapshot = () => states.map((s) => ({ ...s }));
 
-  function reset() {
-    setRunning(false);
-    frameRef.current = 0;
-    setEvent(IDLE_EVENT(tier));
-  }
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
 
-  useEffect(() => { reset(); }, [tier]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!running) return;
-    // For tiers other than major we don't have a full mock sequence —
-    // synthesize a single-step sequence from idle to show the view working.
-    const sequence = tier === 'major' ? mockRuntimeSequence : [];
-    if (sequence.length === 0) { setRunning(false); return; }
-
-    if (frameRef.current >= sequence.length) {
-      setRunning(false);
-      return;
+    if (step.type === 'call_911') {
+      states[i] = { stepId: step.id, status: 'active', remainingSeconds: null };
+      frames.push({ tier, runStatus: 'at_911_intent', activeStepIndex: i, steps: snapshot() });
+      return frames;
     }
 
-    const frame = sequence[frameRef.current];
-    setEvent(frame);
-    frameRef.current += 1;
+    const full = step.timeoutSeconds;
+    const half = Math.ceil(full / 2);
 
-    const t = setTimeout(() => {
-      setRunning((r) => r); // trigger re-render to advance
-    }, 2000);
-    return () => clearTimeout(t);
-  }, [running, event, tier]);
+    states[i] = { stepId: step.id, status: 'active', remainingSeconds: full };
+    frames.push({ tier, runStatus: 'running', activeStepIndex: i, steps: snapshot() });
+
+    states[i] = { stepId: step.id, status: 'active', remainingSeconds: half };
+    frames.push({ tier, runStatus: 'running', activeStepIndex: i, steps: snapshot() });
+
+    states[i] = { stepId: step.id, status: 'timed_out', remainingSeconds: null };
+
+    if (step.onNoResponse === 'stop') {
+      for (let j = i + 1; j < steps.length; j++) {
+        states[j] = { stepId: steps[j].id, status: 'skipped', remainingSeconds: null };
+      }
+      frames.push({ tier, runStatus: 'stopped', activeStepIndex: null, steps: snapshot() });
+      return frames;
+    }
+
+    // timed_out frame before advancing
+    frames.push({ tier, runStatus: 'running', activeStepIndex: i + 1, steps: snapshot() });
+  }
+
+  frames.push({ tier, runStatus: 'completed', activeStepIndex: null, steps: snapshot() });
+  return frames;
+}
+
+const FRAME_MS = 1800;
+
+export function EscalationViewDemo() {
+  const [tier, setTier] = useState<SeverityTier>('major');
+  const [event, setEvent] = useState<EscalationRuntimeEvent>(() => idleEvent('major'));
+  const [running, setRunning] = useState(false);
+
+  const sequenceRef = useRef<EscalationRuntimeEvent[]>([]);
+  const frameRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function clearTimer() {
+    if (timerRef.current !== null) { clearTimeout(timerRef.current); timerRef.current = null; }
+  }
+
+  function reset() {
+    clearTimer();
+    setRunning(false);
+    frameRef.current = 0;
+    setEvent(idleEvent(tier));
+  }
+
+  // Reset when tier changes
+  useEffect(() => { reset(); }, [tier]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function advance() {
+    const seq = sequenceRef.current;
+    if (frameRef.current >= seq.length) { setRunning(false); return; }
+    setEvent(seq[frameRef.current]);
+    frameRef.current += 1;
+    timerRef.current = setTimeout(advance, FRAME_MS);
+  }
 
   function start() {
+    clearTimer();
+    sequenceRef.current = buildSequence(mockConfig[tier]);
     frameRef.current = 0;
-    setEvent(IDLE_EVENT(tier));
+    setEvent(idleEvent(tier));
     setRunning(true);
+    timerRef.current = setTimeout(advance, 400); // short delay before first frame
   }
+
+  // Cleanup on unmount
+  useEffect(() => clearTimer, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-lg mx-auto">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">EscalationView — dev demo</h1>
-        <p className="text-sm text-gray-500 mb-6">Animates through mockRuntimeSequence. Replace with real engine events at Phase 2.</p>
+        <p className="text-sm text-gray-500 mb-6">
+          Animates a synthetic sequence for any tier. Wire to real engine events at Phase 2.
+        </p>
 
         {/* tier selector */}
         <div className="flex gap-2 mb-6">
