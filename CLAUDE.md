@@ -17,7 +17,7 @@ An intelligent, **user-configurable escalation layer** on top of elder-care dete
 - **3D (optional):** Spline for lazy-loaded hero only; app must look good without it
 - **Models** (use exact model IDs):
   - Classifier: `gemini-2.0-flash`
-  - Fallback: `gemini-1.5-flash`
+  - Fallback: `gemini-2.0-flash-lite`
 
 ## Commands
 
@@ -45,7 +45,7 @@ An intelligent, **user-configurable escalation layer** on top of elder-care dete
 
 ## Cost guardrail
 
-- Prefer `gemini-1.5-flash` for cheap/iterative checks; `gemini-2.0-flash` for actual classifier.
+- Prefer `gemini-2.0-flash-lite` for cheap/iterative checks; `gemini-2.0-flash` for actual classifier.
 - Keep prompts tight; cap `maxOutputTokens` modestly.
 
 ---
