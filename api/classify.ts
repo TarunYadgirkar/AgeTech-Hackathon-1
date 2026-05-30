@@ -18,6 +18,20 @@ const SYSTEM_PROMPT =
 
 const VALID_TIERS = new Set<string>(['minor', 'medium', 'major']);
 
+const MAJOR_KEYWORDS = ['fall', 'fell', 'floor', 'unresponsive', 'unconscious', 'collapsed', 'not breathing', 'chest pain', 'stroke', 'seizure', 'emergency', 'blood', 'injured', 'injury'];
+const MEDIUM_KEYWORDS = ['not responded', 'not responding', "hasn't gotten up", 'no activity', 'prolonged', 'unusual', 'missed', 'hasn\'t moved', 'hours', 'curtains', 'lights', 'door'];
+
+function keywordFallback(text: string): ClassifierResult {
+  const lower = text.toLowerCase();
+  if (MAJOR_KEYWORDS.some(k => lower.includes(k))) {
+    return { tier: 'major', reasoning: 'Keyword analysis detected signs of a serious medical event or fall requiring immediate response.' };
+  }
+  if (MEDIUM_KEYWORDS.some(k => lower.includes(k))) {
+    return { tier: 'medium', reasoning: 'Keyword analysis detected an unusual deviation from routine that warrants prompt human contact.' };
+  }
+  return { tier: 'minor', reasoning: 'Keyword analysis found no immediate red flags — slight deviation from normal routine.' };
+}
+
 function isRateLimit(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : String(e);
   return msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota');
@@ -78,9 +92,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error(`[classify] ${model} failed:`, e instanceof Error ? e.message : e);
     }
   }
-  if (isRateLimit(lastErr)) {
-    res.status(429).json({ error: 'rate limited — try again in a moment' });
-  } else {
-    res.status(500).json({ error: 'classification failed' });
-  }
+  res.status(200).json(keywordFallback(text));
 }
