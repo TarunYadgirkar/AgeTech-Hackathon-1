@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { ClassifierResult } from '../src/types/classifier';
 import type { SeverityTier } from '../src/types/escalation';
@@ -6,33 +6,33 @@ import type { SeverityTier } from '../src/types/escalation';
 const SYSTEM_PROMPT =
   'You are a triage classifier for an elder-care escalation system. You receive a ' +
   'short free-text description of a possible problem with an older adult living alone. ' +
-  'Classify the situation into exactly one severity tier — `minor`, `medium`, or `major` — ' +
+  'Classify the situation into exactly one severity tier — minor, medium, or major — ' +
   'using only the description provided (do not assume medical history). ' +
-  '`minor` = slightly off a normal routine, no sign of harm. ' +
-  '`medium` = a clear deviation that could signal a problem and warrants prompt human contact. ' +
-  '`major` = signs of a fall, medical event, or unresponsiveness needing the fastest response, ' +
+  'minor = slightly off a normal routine, no sign of harm. ' +
+  'medium = a clear deviation that could signal a problem and warrants prompt human contact. ' +
+  'major = signs of a fall, medical event, or unresponsiveness needing the fastest response, ' +
   'up to emergency services. If you are between two tiers, choose the higher one. ' +
-  'Respond with ONLY a JSON object of the form {"tier": "...", "reasoning": "..."} ' +
-  'where reasoning is 1–3 plain sentences explaining your choice. Output nothing else.';
+  'Respond with ONLY a JSON object: {"tier": "minor|medium|major", "reasoning": "1-3 sentences"}. ' +
+  'Output nothing else.';
 
 const VALID_TIERS = new Set<string>(['minor', 'medium', 'major']);
 
 async function callModel(
-  client: Anthropic,
+  ai: GoogleGenAI,
   model: string,
   text: string,
 ): Promise<ClassifierResult> {
-  const msg = await client.messages.create({
+  const response = await ai.models.generateContent({
     model,
-    max_tokens: 256,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: text }],
+    contents: text,
+    config: {
+      systemInstruction: SYSTEM_PROMPT,
+      maxOutputTokens: 256,
+      responseMimeType: 'application/json',
+    },
   });
 
-  const block = msg.content[0];
-  if (block.type !== 'text') throw new Error('unexpected content type');
-
-  const raw = JSON.parse(block.text) as unknown;
+  const raw = JSON.parse(response.text ?? '') as unknown;
   if (typeof raw !== 'object' || raw === null) throw new Error('non-object response');
 
   const { tier, reasoning } = raw as Record<string, unknown>;
@@ -55,14 +55,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   try {
-    const result = await callModel(client, 'claude-sonnet-4-6', text);
+    const result = await callModel(ai, 'gemini-2.0-flash', text);
     res.status(200).json(result);
   } catch {
     try {
-      const result = await callModel(client, 'claude-haiku-4-5-20251001', text);
+      const result = await callModel(ai, 'gemini-1.5-flash', text);
       res.status(200).json(result);
     } catch {
       res.status(500).json({ error: 'classification failed' });

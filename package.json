@@ -11,7 +11,7 @@
     "harness": "npx tsx src/engine/harness.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "@google/genai": "^2.7.0",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.95",
     "@tailwindcss/vite": "^4.3.0",
