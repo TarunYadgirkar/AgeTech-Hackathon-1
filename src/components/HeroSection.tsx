@@ -110,16 +110,16 @@ export default function HeroSection({ onGoToDashboard, onGoToScenario }: Props) 
 
             <div className="flex items-center gap-3">
               <button
-                onClick={onGoToDashboard}
+                onClick={onGoToScenario}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
               >
-                Open Dashboard
+                Try an example
               </button>
               <button
-                onClick={onGoToScenario}
+                onClick={onGoToDashboard}
                 className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors"
               >
-                See it in action →
+                Try a custom scenario
               </button>
             </div>
 

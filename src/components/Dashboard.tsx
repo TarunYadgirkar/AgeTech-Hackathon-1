@@ -42,12 +42,32 @@ export default function Dashboard({
 
   return (
     <div className="space-y-4">
+      {/* How to use */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm px-5 py-4">
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works</p>
+        <div className="flex items-start gap-6">
+          {[
+            { n: '1', label: 'Describe the incident', sub: 'Type what you\'re seeing in plain language, or load one of the example scenarios.' },
+            { n: '2', label: 'AI classifies severity', sub: 'Gemini reads the description and returns a tier (minor / medium / major) with visible reasoning.' },
+            { n: '3', label: 'Escalation runs automatically', sub: 'The procedure below kicks off — voice call, contacts, 911 intent — step by step until someone responds.' },
+          ].map(({ n, label, sub }) => (
+            <div key={n} className="flex items-start gap-3 flex-1">
+              <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{n}</span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{label}</p>
+                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Incident input */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Incident Description</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Describe what you're seeing. Claude figures out how serious it is and explains why.</p>
+            <p className="text-xs text-slate-400 mt-0.5">Describe what you're seeing in plain language. The AI figures out how serious it is and explains why.</p>
           </div>
           <span className="text-xs text-slate-400 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg font-medium">
             {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

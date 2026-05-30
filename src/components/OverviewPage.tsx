@@ -181,7 +181,10 @@ export default function OverviewPage({ onScenarioSelect }: Props) {
           <div className="bg-slate-900 rounded-2xl p-7 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Live Incident · 2:14 AM</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Incident Alert · 2:14 AM</p>
+                  <span className="text-xs font-semibold px-2 py-0.5 bg-slate-700 text-slate-300 rounded-full">Example</span>
+                </div>
                 <p className="text-lg font-medium text-white leading-snug max-w-2xl">
                   "Mary's wearable detected a hard fall in the hallway. She has not stood up and is not responding to automated device check-ins."
                 </p>
@@ -235,8 +238,11 @@ export default function OverviewPage({ onScenarioSelect }: Props) {
           {/* Load scenarios */}
           <div className="space-y-5">
             <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-slate-900">Try a scenario on the dashboard</h3>
-              <p className="text-sm text-slate-400">Click to load the incident text into the dashboard, then classify with AI to see the full response run.</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-900">Example scenarios</h3>
+                <span className="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-full">3 examples</span>
+              </div>
+              <p className="text-sm text-slate-400">These are realistic elder-care incidents. Click one to load it into the dashboard, then hit "Classify with AI" to watch the full escalation run.</p>
             </div>
             <div className="grid grid-cols-3 gap-4">
               {LOAD_SCENARIOS.map(({ label, tier, tierColor, description, text }) => (
