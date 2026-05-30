@@ -17,7 +17,7 @@ export default function Navbar({ isRunning, runStatus, page, onNavigate }: Props
       <div className="max-w-7xl mx-auto px-8 h-full flex items-center justify-between">
         {/* Logo — click goes home */}
         <button onClick={() => onNavigate('landing')} className="flex items-center gap-2.5">
-          <img src="/favicon.svg" alt="GuardianAlert logo" className="w-7 h-7" />
+          <img src="/logo.jfif" alt="GuardianAlert logo" className="w-8 h-8 rounded-lg object-cover" />
           <span className="font-semibold text-slate-900 tracking-tight">GuardianAlert</span>
           {(isRunning || runStatus === 'at_911_intent') && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full ml-2">
