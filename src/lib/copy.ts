@@ -95,35 +95,35 @@ export interface ScenarioPreset {
 
 export const DEMO_SCENARIOS: ScenarioPreset[] = [
   {
-    label: 'Unopened curtains',
-    text:  "Margaret hasn't opened her curtains and it's already 11am. She always opens them by 7.",
+    label: 'Curtains still closed',
+    text:  "Smart sensor: Margaret's curtains haven't opened. It's 11am — she opens them by 7 every morning without exception.",
   },
   {
-    label: 'Skipped coffee',
-    text:  "Dad skipped his morning coffee again — second day in a row. He's been seeming a bit off.",
+    label: 'Coffee maker untouched',
+    text:  "Smart appliance alert: Dad's coffee maker shows zero activity this morning. He makes coffee every day by 8am. This is the second consecutive missed morning.",
   },
   {
-    label: 'Stayed in bed past noon',
-    text:  "Margaret hasn't gotten out of bed and it's 1pm. She went to sleep at her normal time last night.",
+    label: 'No bedroom exit by 1pm',
+    text:  "Motion sensors show Margaret has not left her bedroom. It's 1pm — her routine normally has her in the kitchen by 8:30.",
   },
   {
-    label: 'Missed medication',
-    text:  "My father didn't take his blood pressure medication this morning. He never skips it.",
+    label: 'Medication not taken',
+    text:  "Smart pill dispenser alert: my father's morning blood pressure medication was not dispensed or taken. He has never missed a dose.",
   },
   {
     label: 'No movement for 4 hours',
-    text:  "Eleanor fell last week and the motion sensor shows she hasn't moved from the living room chair in over 4 hours.",
+    text:  "Motion sensors: no movement detected anywhere in the apartment for over 4 hours. Margaret typically moves between rooms every 45–60 minutes.",
   },
   {
-    label: 'On the floor',
-    text:  "Margaret is on the hallway floor and isn't responding when I call her name through the door.",
+    label: 'Fall detector triggered',
+    text:  "Wearable fall detection alert: Margaret's device detected a hard fall in the hallway 6 minutes ago. She has not stood up and is not responding to automated check-in calls.",
   },
   {
-    label: 'Panic button, no answer',
-    text:  "Dad pressed his emergency button and when I called back there was no answer. He's 84 and lives alone.",
+    label: 'Panic button, no callback',
+    text:  "Dad pressed his emergency alert button 10 minutes ago. Automated callback system has called three times with no answer. He is 84 and lives alone.",
   },
   {
-    label: 'Smoke alarm, unreachable',
-    text:  "The smoke detector in my grandmother's apartment went off and she isn't picking up her phone. A neighbor says they can smell something.",
+    label: 'Smoke alarm, no response',
+    text:  "Smoke detector triggered in grandmother's apartment 4 minutes ago. Automated calls are going unanswered and the alarm is still active.",
   },
 ];
