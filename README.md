@@ -19,8 +19,7 @@
 ---
 
 **Hackathon:** AgeTech SF Hackathon 2026<br/>
-**Team:** Logesh Rajendran, Vanessa Lopez, Volodymyr Borysenko<br/>
-**Live demo:** [guardianAlert on Vercel](https://age-tech-hackathon-1.vercel.app)
+**Live demo:** [GuardianAlert](https://age-tech-hackathon-1.vercel.app)
 
 ---
 
