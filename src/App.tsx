@@ -74,14 +74,13 @@ export default function App() {
         lastFiredIndex = ev.activeStepIndex
         const step = config[tier].steps[ev.activeStepIndex]
         if (step?.phoneNumber && (step.type === 'voice_call' || step.type === 'contact')) {
-          const msg = `Elder care alert. ${step.target} is being contacted. Incident: ${incidentText}. Please respond immediately.`
           const ac = new AbortController()
           pollAbortRef.current?.abort()
           pollAbortRef.current = ac
-          notifyCall(step.phoneNumber, msg).then(sid => {
-            if (sid && !ac.signal.aborted) {
+          notifyCall(step.phoneNumber, step.target, incidentText).then(call_id => {
+            if (call_id && !ac.signal.aborted) {
               pollCallResponse(
-                sid,
+                call_id,
                 () => { if (!ac.signal.aborted) machineRef.current?.respond() },
                 () => { if (!ac.signal.aborted) machineRef.current?.advanceStep() },
                 ac.signal,
@@ -109,7 +108,7 @@ export default function App() {
             onNavigate={setView}
           />
         ) : (
-          <div className="max-w-3xl mx-auto px-8 py-8 space-y-5">
+          <div className="px-8 py-8 space-y-5">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">Incident Response</h1>

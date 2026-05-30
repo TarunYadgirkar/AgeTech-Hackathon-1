@@ -1,5 +1,23 @@
 import { GoogleGenAI } from '@google/genai';
+import { neon } from '@neondatabase/serverless';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+async function logIncident(description: string, tier: string, reasoning: string) {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    await sql`CREATE TABLE IF NOT EXISTS incidents (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      description TEXT NOT NULL,
+      tier VARCHAR(10),
+      reasoning TEXT
+    )`;
+    await sql`INSERT INTO incidents (description, tier, reasoning) VALUES (${description}, ${tier}, ${reasoning})`;
+  } catch (e) {
+    console.warn('[classify] neon log failed:', e instanceof Error ? e.message : e);
+  }
+}
 
 type SeverityTier = 'minor' | 'medium' | 'major';
 interface ClassifierResult { tier: SeverityTier; reasoning: string; }
@@ -85,6 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   for (const model of models) {
     try {
       const result = await callModel(ai, model, text);
+      logIncident(text, result.tier, result.reasoning).catch(() => {});
       res.status(200).json(result);
       return;
     } catch (e) {
@@ -92,5 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error(`[classify] ${model} failed:`, e instanceof Error ? e.message : e);
     }
   }
-  res.status(200).json(keywordFallback(text));
+  const fallback = keywordFallback(text);
+  logIncident(text, fallback.tier, fallback.reasoning).catch(() => {});
+  res.status(200).json(fallback);
 }

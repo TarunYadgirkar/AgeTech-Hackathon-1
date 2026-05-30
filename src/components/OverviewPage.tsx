@@ -69,7 +69,7 @@ interface Props {
 
 export default function OverviewPage({ onScenarioSelect, onNavigate }: Props) {
   return (
-    <div className="max-w-3xl mx-auto px-8 py-10 space-y-12">
+    <div className="px-8 py-10 space-y-12">
 
       {/* Hero */}
       <div className="space-y-4">
@@ -125,7 +125,7 @@ export default function OverviewPage({ onScenarioSelect, onNavigate }: Props) {
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">How it works</p>
           <h2 className="text-xl font-semibold text-slate-900">From alert to response — automatically</h2>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {HOW_STEPS.map(({ num, title, body }) => (
             <div key={num} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-2 shadow-sm">
               <span className="text-xs font-bold text-blue-600 font-mono">{num}</span>

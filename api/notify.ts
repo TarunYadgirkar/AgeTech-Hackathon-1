@@ -1,9 +1,5 @@
-import twilio from 'twilio';
+import Retell from 'retell-sdk';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -11,30 +7,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER } = process.env;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+  const { RETELL_API_KEY, RETELL_AGENT_ID, RETELL_FROM_NUMBER } = process.env;
+  if (!RETELL_API_KEY || !RETELL_AGENT_ID || !RETELL_FROM_NUMBER) {
     res.status(503).json({ error: 'notify not configured' });
     return;
   }
 
   const body = req.body as Record<string, unknown>;
   const to = typeof body?.to === 'string' ? body.to.trim() : '';
-  const message = typeof body?.message === 'string' ? body.message.trim() : 'Elder care alert.';
+  const target = typeof body?.target === 'string' ? body.target.trim() : 'Contact';
+  const incident = typeof body?.incident === 'string' ? body.incident.trim() : 'Elder care alert';
 
   if (!to) {
     res.status(400).json({ error: 'to is required' });
     return;
   }
 
-  const safe = esc(message);
-  const twiml = `<Response><Say voice="alice" rate="slow">${safe}</Say><Pause length="2"/><Say voice="alice" rate="slow">${safe}</Say></Response>`;
-
   try {
-    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-    const call = await client.calls.create({ to, from: TWILIO_FROM_NUMBER, twiml });
-    res.status(200).json({ success: true, sid: call.sid });
+    const client = new Retell({ apiKey: RETELL_API_KEY });
+    const call = await client.call.createPhoneCall({
+      from_number: RETELL_FROM_NUMBER,
+      to_number: to,
+      override_agent_id: RETELL_AGENT_ID,
+      retell_llm_dynamic_variables: {
+        target_name: target,
+        incident_description: incident,
+      },
+    });
+    res.status(200).json({ success: true, call_id: call.call_id });
   } catch (e) {
-    console.error('[notify] call failed:', e instanceof Error ? e.message : e);
+    console.error('[notify] Retell call failed:', e instanceof Error ? e.message : e);
     res.status(500).json({ error: 'call failed' });
   }
 }
