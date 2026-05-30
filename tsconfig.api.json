@@ -9,7 +9,7 @@
     "verbatimModuleSyntax": true,
     "strict": true,
     "noEmit": true,
-    "esModuleInterop": false
+    "esModuleInterop": true
   },
   "include": ["api"]
 }
