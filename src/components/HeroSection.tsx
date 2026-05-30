@@ -1,131 +1,155 @@
-type View = 'overview' | 'dashboard'
+import { lazy, Suspense } from 'react'
 
-interface Props {
-  isRunning: boolean
-  runStatus: string | null
-  currentView: View
-  onNavigate: (v: View) => void
+const SplineLazy = lazy(() => import('@splinetool/react-spline'))
+const SPLINE_URL = (import.meta.env.VITE_SPLINE_URL as string | undefined) ?? ''
+
+function NetworkFallback() {
+  return (
+    <div className="relative w-full h-full flex items-center justify-center select-none">
+      {/* Animated ping rings */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="rounded-full border border-blue-300 animate-ping"
+          style={{ width: 140, height: 140, animationDuration: '2s', opacity: 0.25 }}
+        />
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="rounded-full border border-amber-300 animate-ping"
+          style={{ width: 210, height: 210, animationDuration: '3s', opacity: 0.18 }}
+        />
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="rounded-full border border-red-300 animate-ping"
+          style={{ width: 290, height: 290, animationDuration: '4s', opacity: 0.12 }}
+        />
+      </div>
+
+      {/* Static SVG diagram */}
+      <svg viewBox="0 0 360 360" className="w-full h-full max-w-sm" xmlns="http://www.w3.org/2000/svg">
+        {/* Static severity rings */}
+        <circle cx="180" cy="180" r="65" fill="#eff6ff" stroke="#bfdbfe" strokeWidth="1" opacity="0.6" />
+        <circle cx="180" cy="180" r="100" fill="none" stroke="#fde68a" strokeWidth="0.75" opacity="0.5" />
+        <circle cx="180" cy="180" r="138" fill="none" stroke="#fecaca" strokeWidth="0.75" opacity="0.45" />
+
+        {/* Connection lines */}
+        <line x1="180" y1="180" x2="70" y2="70" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="5 4" />
+        <line x1="180" y1="180" x2="290" y2="70" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="5 4" />
+        <line x1="180" y1="180" x2="70" y2="290" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="5 4" />
+        <line x1="180" y1="180" x2="316" y2="180" stroke="#fca5a5" strokeWidth="1" strokeDasharray="5 4" />
+
+        {/* Center home node */}
+        <circle cx="180" cy="180" r="32" fill="#2563eb" />
+        {/* House: roof */}
+        <polygon points="180,160 200,178 160,178" fill="white" opacity="0.92" />
+        {/* House: walls */}
+        <rect x="164" y="178" width="32" height="19" rx="1" fill="white" opacity="0.92" />
+        {/* House: door */}
+        <rect x="175" y="186" width="10" height="11" rx="1" fill="#1d4ed8" opacity="0.55" />
+
+        {/* Caregiver — top left */}
+        <circle cx="70" cy="70" r="22" fill="white" stroke="#d1fae5" strokeWidth="2" />
+        <circle cx="70" cy="70" r="11" fill="#10b981" />
+        <text x="70" y="101" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Caregiver</text>
+
+        {/* Family — top right */}
+        <circle cx="290" cy="70" r="22" fill="white" stroke="#dbeafe" strokeWidth="2" />
+        <circle cx="290" cy="70" r="11" fill="#3b82f6" />
+        <text x="290" y="101" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Family</text>
+
+        {/* Neighbor — bottom left */}
+        <circle cx="70" cy="290" r="22" fill="white" stroke="#fef3c7" strokeWidth="2" />
+        <circle cx="70" cy="290" r="11" fill="#f59e0b" />
+        <text x="70" y="321" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Neighbor</text>
+
+        {/* Emergency — right */}
+        <circle cx="316" cy="180" r="22" fill="white" stroke="#fee2e2" strokeWidth="2" />
+        <circle cx="316" cy="180" r="11" fill="#ef4444" />
+        <text x="316" y="211" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Emergency</text>
+
+        {/* Ring labels */}
+        <text x="222" y="124" fontSize="8" fill="#93c5fd" fontFamily="ui-sans-serif,system-ui,sans-serif" fontWeight="700" letterSpacing="1">MINOR</text>
+        <text x="248" y="90" fontSize="8" fill="#fcd34d" fontFamily="ui-sans-serif,system-ui,sans-serif" fontWeight="700" letterSpacing="1">MEDIUM</text>
+        <text x="265" y="52" fontSize="8" fill="#fca5a5" fontFamily="ui-sans-serif,system-ui,sans-serif" fontWeight="700" letterSpacing="1">MAJOR</text>
+      </svg>
+    </div>
+  )
 }
 
-const NAV = [
-  {
-    id: 'overview' as View,
-    label: 'Overview',
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-      </svg>
-    ),
-  },
-  {
-    id: 'dashboard' as View,
-    label: 'Dashboard',
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-      </svg>
-    ),
-  },
-]
+interface Props {
+  onGoToDashboard: () => void
+  onGoToScenario: () => void
+}
 
-const NAV_DECORATIVE = [
-  {
-    label: 'Contacts',
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Activity',
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Settings',
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
-]
-
-export default function HeroSection({ isRunning, runStatus, currentView, onNavigate }: Props) {
+export default function HeroSection({ onGoToDashboard, onGoToScenario }: Props) {
   return (
-    <aside className="w-56 bg-white border-r border-slate-200 flex flex-col shrink-0">
-      {/* Brand */}
-      <div className="px-5 pt-6 pb-5 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center shrink-0">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
+    <section id="hero" className="min-h-screen flex items-center pt-16 bg-white">
+      <div className="max-w-7xl mx-auto px-8 w-full py-20">
+        <div className="grid grid-cols-2 gap-16 items-center">
+          {/* Left */}
+          <div className="space-y-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-100 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Elder-care escalation intelligence</span>
+            </div>
+
+            <div className="space-y-4">
+              <h1 className="text-[3.5rem] font-bold text-slate-900 leading-[1.1] tracking-tight">
+                Detection without
+                <br />
+                <span className="text-blue-600">response</span>{' '}
+                <span className="text-slate-400 font-normal">isn't</span>
+                <br />
+                <span className="text-slate-400 font-normal">safety.</span>
+              </h1>
+              <p className="text-lg text-slate-500 leading-relaxed max-w-md">
+                GuardianAlert closes the gap between a sensor flagging an event and a human confirming someone is safe — automatically, with verified escalation.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onGoToDashboard}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              >
+                Open Dashboard
+              </button>
+              <button
+                onClick={onGoToScenario}
+                className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors"
+              >
+                See it in action →
+              </button>
+            </div>
+
+            {/* Mini stat strip */}
+            <div className="flex items-center gap-6 pt-2 border-t border-slate-100">
+              {[
+                { num: '28M', label: 'older adults living alone' },
+                { num: '3h+', label: 'avg. delay without automation' },
+                { num: '60%', label: 'fall victims wait alone' },
+              ].map(({ num, label }) => (
+                <div key={num}>
+                  <p className="text-lg font-bold text-slate-900">{num}</p>
+                  <p className="text-xs text-slate-400 leading-snug">{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <span className="font-semibold text-slate-900 text-sm tracking-tight">GuardianAlert</span>
-        </div>
-        <p className="text-xs text-slate-400 mt-1.5 ml-0.5">Elder-care escalation</p>
-      </div>
 
-      {/* Nav — wired */}
-      <nav className="p-2.5 space-y-0.5 pt-3">
-        {NAV.map(({ id, label, icon }) => {
-          const active = currentView === id
-          return (
-            <button
-              key={id}
-              onClick={() => onNavigate(id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
-                active
-                  ? 'bg-blue-50 text-blue-700 font-medium'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-              }`}
-            >
-              {icon}
-              {label}
-            </button>
-          )
-        })}
-
-        <div className="pt-3 pb-1">
-          <p className="px-3 text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">More</p>
-        </div>
-
-        {NAV_DECORATIVE.map(({ label, icon }) => (
-          <div
-            key={label}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 cursor-default select-none"
-          >
-            {icon}
-            {label}
+          {/* Right — Spline or fallback */}
+          <div className="h-[480px] relative">
+            {SPLINE_URL ? (
+              <Suspense fallback={<NetworkFallback />}>
+                <SplineLazy scene={SPLINE_URL} className="w-full h-full" />
+              </Suspense>
+            ) : (
+              <NetworkFallback />
+            )}
           </div>
-        ))}
-      </nav>
-
-      {/* Status footer */}
-      <div className="mt-auto p-4 border-t border-slate-100 space-y-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${
-            runStatus === 'at_911_intent' ? 'bg-red-500 animate-pulse'
-            : isRunning ? 'bg-blue-500 animate-pulse'
-            : 'bg-slate-300'
-          }`} />
-          <span className="text-xs text-slate-500 leading-tight">
-            {runStatus === 'at_911_intent' ? '911 intent — escalated'
-            : isRunning ? 'Escalation active'
-            : 'No active incidents'}
-          </span>
-        </div>
-        <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-100">
-          <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">System</p>
-          <p className="text-xs text-slate-600 mt-0.5">AI Triage · Auto-Escalate</p>
         </div>
       </div>
-    </aside>
+    </section>
   )
 }

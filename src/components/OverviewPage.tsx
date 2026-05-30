@@ -1,178 +1,243 @@
-type View = 'overview' | 'dashboard'
+const STATS = [
+  {
+    num: '28M',
+    label: 'Older adults living alone',
+    detail: 'In the US alone — with no immediate person to check on them when something goes wrong.',
+  },
+  {
+    num: '3+ hrs',
+    label: 'Delayed escalation',
+    detail: 'The average time for emergency help to reach an isolated senior after a fall, when no automated alert exists.',
+  },
+  {
+    num: '1 in 3',
+    label: 'Caregiver uncertainty',
+    detail: 'Seniors who fall do not call for help, leaving caregivers unaware until the situation becomes critical.',
+  },
+]
 
-const SCENARIOS = [
+const PROBLEM_CARDS = [
+  {
+    title: 'Sensors see it. No one acts.',
+    body: 'Smart home devices and wearables have become remarkably good at detecting falls, irregular patterns, and inactivity. But detection alone does not make anyone safe. The gap between a sensor firing and a human confirming a person is okay has remained largely unaddressed.',
+  },
+  {
+    title: 'Emergencies are rarely clear-cut.',
+    body: 'When an older adult says they feel dizzy, haven\'t gotten up yet, or their curtains haven\'t opened — that information is ambiguous. Caregivers can\'t always assess severity from a text notification, and response is inconsistent as a result.',
+  },
+  {
+    title: 'Manual coordination fails under pressure.',
+    body: 'When something happens at 2 AM, a family member scrambling to call through a contacts list is not a reliable response plan. Without a structured escalation procedure, critical time is lost — and the people who need to respond are often the last to know.',
+  },
+]
+
+const DEMO_STEPS = [
+  {
+    num: 1,
+    label: 'AI Voice Check',
+    sub: 'Retell calls Mary directly',
+    outcome: 'No answer',
+    ring: 'border-blue-200 bg-blue-50',
+    badge: 'bg-blue-100 text-blue-700',
+    dot: 'bg-blue-500',
+  },
+  {
+    num: 2,
+    label: 'Daughter — Sarah',
+    sub: 'Family notified by Twilio',
+    outcome: 'No answer',
+    ring: 'border-slate-200 bg-white',
+    badge: 'bg-slate-100 text-slate-600',
+    dot: 'bg-slate-400',
+  },
+  {
+    num: 3,
+    label: 'Neighbor — Tom',
+    sub: 'Backup contact activated',
+    outcome: 'No answer',
+    ring: 'border-amber-200 bg-amber-50',
+    badge: 'bg-amber-100 text-amber-700',
+    dot: 'bg-amber-500',
+  },
+  {
+    num: 4,
+    label: '911 Intent',
+    sub: 'Shown only — not dialed',
+    outcome: 'Intent state',
+    ring: 'border-red-200 bg-red-50',
+    badge: 'bg-red-100 text-red-700',
+    dot: 'bg-red-500',
+  },
+]
+
+const LOAD_SCENARIOS = [
   {
     label: 'Routine Deviation',
     tier: 'Minor',
     tierColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-    description: "Margaret's curtains haven't opened. It's 11am — she opens them every morning by 7. Sensor has logged no movement in the bedroom.",
-    text: "Smart sensor: Margaret's curtains haven't opened. It's 11am — she opens them by 7 every morning without exception.",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-      </svg>
-    ),
+    description: "Margaret's curtains haven't opened. It's 11 AM — she opens them by 7 every morning.",
+    text: "Smart sensor: Margaret's curtains haven't opened. It's 11am — she opens them by 7 every morning without exception. Bedroom motion sensor also shows no activity since midnight.",
   },
   {
     label: 'Prolonged Inactivity',
     tier: 'Medium',
     tierColor: 'text-amber-700 bg-amber-50 border-amber-200',
-    description: "Motion sensors show no activity anywhere in the apartment for over 4 hours. Eleanor typically moves between rooms every 45 minutes.",
-    text: "Motion sensors: no movement detected anywhere in the apartment for over 4 hours. Margaret typically moves between rooms every 45–60 minutes.",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
+    description: 'Motion sensors show no activity anywhere in the apartment for over 4 hours.',
+    text: "Motion sensors: no movement detected anywhere in the apartment for over 4 hours. Margaret typically moves between rooms every 45–60 minutes. Last detected motion was at 6:12 AM.",
   },
   {
     label: 'Fall Detected',
     tier: 'Major',
     tierColor: 'text-red-700 bg-red-50 border-red-200',
-    description: "Wearable fall detector triggered in the hallway. No movement for 6 minutes. Not responding to automated check-in calls.",
-    text: "Wearable fall detection alert: Margaret's device detected a hard fall in the hallway 6 minutes ago. She has not stood up and is not responding to automated check-in calls.",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-      </svg>
-    ),
-  },
-]
-
-const HOW_STEPS = [
-  {
-    num: '01',
-    title: 'Sensor flags an anomaly',
-    body: 'A smart home device, wearable, or caregiver inputs a free-text description of what was detected.',
-  },
-  {
-    num: '02',
-    title: 'AI classifies severity',
-    body: 'The system reads the description and assigns a tier — minor, medium, or major — with a plain-language explanation.',
-  },
-  {
-    num: '03',
-    title: 'Escalation procedure runs',
-    body: 'Configured contacts are called in order. Each step waits for a response. If no answer, the next contact is tried.',
-  },
-  {
-    num: '04',
-    title: 'Response confirmed',
-    body: 'When someone picks up the call, the system marks the incident resolved. If the chain completes without response, 911 is shown as a final intent.',
+    description: 'Wearable fall detector triggered in the hallway. No movement for 6 minutes.',
+    text: "Wearable fall detection alert: Margaret's device detected a hard fall in the hallway 6 minutes ago. She has not stood up and is not responding to automated check-in calls from the device.",
   },
 ]
 
 interface Props {
   onScenarioSelect: (text: string) => void
-  onNavigate: (view: View) => void
 }
 
-export default function OverviewPage({ onScenarioSelect, onNavigate }: Props) {
+export default function OverviewPage({ onScenarioSelect }: Props) {
   return (
-    <div className="px-8 py-10 space-y-12">
+    <>
+      {/* ── Problem ── */}
+      <section id="problem" className="bg-slate-50 py-24 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-8 space-y-14">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">The Problem</p>
+            <h2 className="text-3xl font-bold text-slate-900 leading-snug">
+              Existing systems detect events.<br />
+              They rarely ensure anyone responds.
+            </h2>
+          </div>
 
-      {/* Hero */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Elder-Care Escalation</span>
-        </div>
-        <h1 className="text-3xl font-bold text-slate-900 leading-tight">
-          Detection is only half the problem.<br />
-          <span className="text-slate-500 font-normal">The other half is making sure a human responds.</span>
-        </h1>
-        <p className="text-slate-500 text-base leading-relaxed max-w-xl">
-          GuardianAlert is a check-in system that automatically alerts the right people — family, neighbors, emergency services — when something is wrong with an older adult living alone.
-        </p>
-        <div className="flex gap-3 pt-1">
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
-          >
-            Open Dashboard
-          </button>
-          <button
-            onClick={() => document.getElementById('scenarios')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors"
-          >
-            See it in action
-          </button>
-        </div>
-      </div>
-
-      {/* Problem callout */}
-      <div className="bg-slate-900 rounded-2xl p-7 space-y-4">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">The Problem</p>
-        <p className="text-xl font-semibold text-white leading-snug">
-          Existing systems detect events.<br />They rarely ensure anyone responds.
-        </p>
-        <div className="grid grid-cols-3 gap-4 pt-2">
-          {[
-            { stat: '23%', label: 'of elder falls go undiscovered for over an hour' },
-            { stat: '4.5h', label: 'average delay between detection and human response' },
-            { stat: '1 in 3', label: 'older adults live alone with no immediate contact' },
-          ].map(({ stat, label }) => (
-            <div key={stat} className="space-y-1">
-              <p className="text-2xl font-bold text-white">{stat}</p>
-              <p className="text-xs text-slate-400 leading-snug">{label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* How it works */}
-      <div className="space-y-5">
-        <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">How it works</p>
-          <h2 className="text-xl font-semibold text-slate-900">From alert to response — automatically</h2>
-        </div>
-        <div className="grid grid-cols-4 gap-3">
-          {HOW_STEPS.map(({ num, title, body }) => (
-            <div key={num} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-2 shadow-sm">
-              <span className="text-xs font-bold text-blue-600 font-mono">{num}</span>
-              <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">{body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Scenario demo */}
-      <div id="scenarios" className="space-y-5">
-        <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Try it</p>
-          <h2 className="text-xl font-semibold text-slate-900">Select an incident scenario</h2>
-          <p className="text-sm text-slate-500 mt-1">Click a scenario to load it, then classify with AI on the dashboard.</p>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {SCENARIOS.map(({ label, tier, tierColor, description, text, icon }) => (
-            <button
-              key={label}
-              onClick={() => { onScenarioSelect(text); onNavigate('dashboard') }}
-              className="text-left bg-white border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm hover:border-slate-300 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-slate-200 transition-colors shrink-0">
-                  {icon}
+          <div className="grid grid-cols-3 gap-5">
+            {PROBLEM_CARDS.map(({ title, body }) => (
+              <div key={title} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3 shadow-sm">
+                <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
                 </div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${tierColor} shrink-0`}>
-                  {tier}
-                </span>
+                <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{body}</p>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-slate-900">{label}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
-              </div>
-              <div className="flex items-center gap-1 text-xs font-medium text-blue-600 group-hover:text-blue-700">
-                Load scenario
-                <svg className="w-3.5 h-3.5 translate-x-0 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
 
-    </div>
+          {/* Stats */}
+          <div className="bg-slate-900 rounded-2xl p-8">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">By the numbers</p>
+            <div className="grid grid-cols-3 gap-8 divide-x divide-slate-700/50">
+              {STATS.map(({ num, label, detail }) => (
+                <div key={num} className="space-y-2 first:pl-0 pl-8">
+                  <p className="text-4xl font-bold text-white tabular-nums">{num}</p>
+                  <p className="text-sm font-semibold text-slate-300">{label}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Scenario demo ── */}
+      <section id="scenario" className="bg-white py-24 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-8 space-y-12">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">How it works</p>
+            <h2 className="text-3xl font-bold text-slate-900">From alert to response — automatically</h2>
+            <p className="text-slate-500 text-base">A real scenario, showing how GuardianAlert classifies and escalates a care event without any manual coordination.</p>
+          </div>
+
+          {/* Incident card */}
+          <div className="bg-slate-900 rounded-2xl p-7 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Live Incident · 2:14 AM</p>
+                <p className="text-lg font-medium text-white leading-snug max-w-2xl">
+                  "Mary's wearable detected a hard fall in the hallway. She has not stood up and is not responding to automated device check-ins."
+                </p>
+              </div>
+              <div className="shrink-0 px-4 py-2 bg-red-500 rounded-xl text-center">
+                <p className="text-xs font-bold text-white uppercase tracking-widest">Severity</p>
+                <p className="text-xl font-bold text-white mt-0.5">MAJOR</p>
+                <p className="text-xs text-red-200 mt-0.5">AI Classification</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Escalation path */}
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Escalation path — automated</p>
+            <div className="flex items-stretch gap-0">
+              {DEMO_STEPS.map((step, i) => (
+                <div key={step.num} className="flex items-stretch flex-1">
+                  <div className={`flex-1 border ${step.ring} rounded-2xl p-5 space-y-3`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${step.badge}`}>
+                        {step.num}
+                      </span>
+                      <span className={`w-2 h-2 rounded-full ${step.dot}`} />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-slate-900">{step.label}</p>
+                      <p className="text-xs text-slate-500">{step.sub}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs px-2 py-0.5 bg-white border border-slate-200 rounded-full text-slate-500 font-medium">
+                        {step.outcome}
+                      </span>
+                    </div>
+                  </div>
+                  {i < DEMO_STEPS.length - 1 && (
+                    <div className="flex items-center px-2 shrink-0 text-slate-300">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-3">
+              * 911 is shown as intent only. No real emergency call is placed in this system.
+            </p>
+          </div>
+
+          {/* Load scenarios */}
+          <div className="space-y-5">
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold text-slate-900">Try a scenario on the dashboard</h3>
+              <p className="text-sm text-slate-400">Click to load the incident text — then classify with AI to see the full escalation procedure run.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {LOAD_SCENARIOS.map(({ label, tier, tierColor, description, text }) => (
+                <button
+                  key={label}
+                  onClick={() => onScenarioSelect(text)}
+                  className="text-left bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md rounded-2xl p-5 space-y-3 shadow-sm transition-all group"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${tierColor}`}>
+                      {tier}
+                    </span>
+                    <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-slate-900">{label}</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
+                  </div>
+                  <p className="text-xs font-medium text-blue-600 group-hover:text-blue-700">Load scenario →</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }
