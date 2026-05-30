@@ -149,7 +149,7 @@ export default function App() {
         <>
           <HeroSection
             onGoToDashboard={() => setPage('dashboard')}
-            onGoToScenario={() => document.getElementById('scenario')?.scrollIntoView({ behavior: 'smooth' })}
+            onGoToScenario={() => document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' })}
           />
           <OverviewPage onScenarioSelect={handleScenarioSelect} />
         </>

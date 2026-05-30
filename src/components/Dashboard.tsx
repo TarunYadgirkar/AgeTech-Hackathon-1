@@ -68,6 +68,7 @@ export default function Dashboard({
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Incident Description</h2>
             <p className="text-xs text-slate-400 mt-0.5">Describe what you're seeing in plain language. The AI figures out how serious it is and explains why.</p>
+            <p className="text-xs text-blue-500 mt-1">Demo: type any scenario below. In production, this field would be auto-filled by detection partners — wearables, smart home sensors, fall detectors.</p>
           </div>
           <span className="text-xs text-slate-400 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg font-medium">
             {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

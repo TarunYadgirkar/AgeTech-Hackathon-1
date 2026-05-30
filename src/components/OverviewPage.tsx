@@ -236,7 +236,7 @@ export default function OverviewPage({ onScenarioSelect }: Props) {
           </div>
 
           {/* Load scenarios */}
-          <div className="space-y-5">
+          <div id="examples" className="space-y-5">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-semibold text-slate-900">Example scenarios</h3>
