@@ -62,15 +62,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await callModel(ai, 'gemini-2.0-flash', text);
     res.status(200).json(result);
   } catch (e1) {
-    const msg1 = e1 instanceof Error ? e1.message : String(e1);
-    console.error('[classify] primary failed:', msg1);
+    console.error('[classify] primary failed:', e1 instanceof Error ? e1.message : e1);
     try {
       const result = await callModel(ai, 'gemini-1.5-flash', text);
       res.status(200).json(result);
     } catch (e2) {
-      const msg2 = e2 instanceof Error ? e2.message : String(e2);
-      console.error('[classify] fallback failed:', msg2);
-      res.status(500).json({ error: 'classification failed', _debug: msg1 });
+      console.error('[classify] fallback failed:', e2 instanceof Error ? e2.message : e2);
+      res.status(500).json({ error: 'classification failed' });
     }
   }
 }
