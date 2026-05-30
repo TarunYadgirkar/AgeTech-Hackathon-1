@@ -84,32 +84,51 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <HeroSection />
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-5">
-        <Dashboard
-          eventText={eventText}
-          setEventText={setEventText}
-          onClassify={handleClassify}
-          onScenarioSelect={(text) => { setEventText(text); stopMachine(); setResult(null) }}
-          classifying={classifying}
-          classifyError={classifyError}
-          result={result}
-          isRunning={isRunning}
-        />
-        <StepEditor
-          config={config}
-          setConfig={setConfig}
-          focusTier={result?.tier ?? null}
-        />
-        {runtimeEvent && (
-          <EscalationView
-            event={runtimeEvent}
-            config={config}
-            onRespond={() => machineRef.current?.respond()}
-            onStop={stopMachine}
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <HeroSection isRunning={isRunning} runStatus={runtimeEvent?.runStatus ?? null} />
+
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-8 py-8 space-y-5">
+          {/* Page header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900">Incident Response</h1>
+              <p className="text-sm text-slate-400 mt-0.5">AI-assisted triage and escalation</p>
+            </div>
+            {runtimeEvent && isRunning && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-xs font-medium text-blue-700">Escalation in progress</span>
+              </div>
+            )}
+          </div>
+
+          <Dashboard
+            eventText={eventText}
+            setEventText={setEventText}
+            onClassify={handleClassify}
+            onScenarioSelect={(text) => { setEventText(text); stopMachine(); setResult(null) }}
+            classifying={classifying}
+            classifyError={classifyError}
+            result={result}
+            isRunning={isRunning}
           />
-        )}
+
+          {runtimeEvent && (
+            <EscalationView
+              event={runtimeEvent}
+              config={config}
+              onRespond={() => machineRef.current?.respond()}
+              onStop={stopMachine}
+            />
+          )}
+
+          <StepEditor
+            config={config}
+            setConfig={setConfig}
+            focusTier={result?.tier ?? null}
+          />
+        </div>
       </main>
     </div>
   )
