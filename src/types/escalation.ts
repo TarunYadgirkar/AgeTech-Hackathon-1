@@ -40,7 +40,7 @@ export type OnNoResponse = "next_step" | "stop";
  * - `call_911`    — SHOWN as intent only. Never dials a real number.
  *
  * `target`         — human-readable label of who is reached
- *                    (e.g. "Margaret", "Daughter — Sarah", "911").
+ *                    (e.g. "Margaret", "Sarah (daughter)", "911").
  * `timeoutSeconds` — how long to wait at this step before applying onNoResponse.
  * `onNoResponse`   — `next_step` advances to the following step; `stop` halts.
  */
@@ -155,7 +155,7 @@ export const mockConfig: EscalationConfig = {
       {
         id: "minor_2",
         type: "contact",
-        target: "Daughter — Sarah",
+        target: "Sarah (daughter)",
         timeoutSeconds: 10,
         onNoResponse: "stop",
       },
@@ -174,14 +174,14 @@ export const mockConfig: EscalationConfig = {
       {
         id: "medium_2",
         type: "contact",
-        target: "Daughter — Sarah",
+        target: "Sarah (daughter)",
         timeoutSeconds: 8,
         onNoResponse: "next_step",
       },
       {
         id: "medium_3",
         type: "contact",
-        target: "Neighbor — Tom",
+        target: "Tom (neighbor)",
         timeoutSeconds: 8,
         onNoResponse: "stop",
       },
@@ -193,7 +193,7 @@ export const mockConfig: EscalationConfig = {
       {
         id: "major_1",
         type: "contact",
-        target: "Daughter — Sarah",
+        target: "Sarah (daughter)",
         timeoutSeconds: 7,
         onNoResponse: "next_step",
       },

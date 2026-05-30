@@ -1,0 +1,92 @@
+You are continuing work on the AgeTech-Hackathon-1 repo.
+
+Context:
+My teammate ran out of Claude tokens mid-session. Please inspect the repo state first with:
+- git status
+- git log --oneline -5
+- find . -maxdepth 3 -type f | sort
+- npm run build or npm run typecheck if available
+
+We are Person A / Track A for an AgeTech SF Hackathon project.
+
+Product:
+A web app for older adults living alone. A judge/caregiver types a free-text incident like “Margaret hasn’t gotten out of bed and it’s 1pm.” Claude classifies the event as minor / medium / major and returns visible reasoning. Then the app runs the user-configured escalation procedure for that severity tier step-by-step with timers. Major can reach a “calling 911” intent state, but 911 must only be shown, never actually dialed.
+
+Hard rules:
+1. The Anthropic API key must only live server-side in Vercel env vars. Never expose it in src/.
+2. 911 is shown as intent only. Never dial or create any real call path.
+3. Do not hardcode escalation flows. The engine must execute whatever EscalationConfig the user built.
+4. Classifier reasoning must be returned and rendered.
+5. Use full model strings:
+   - claude-sonnet-4-6
+   - claude-haiku-4-5-20251001
+6. Shared types in src/types/* are the frozen contract. Do not change them unless absolutely necessary.
+
+Current known progress before tokens ran out:
+- Repo was cloned.
+- Vite React TypeScript scaffold was created.
+- CLAUDE.md and PRD.md were pulled from GitHub.
+- escalation.ts and classifier.ts were moved into src/types/.
+- package name was changed from tmp to agetech-hackathon.
+- Dependencies installed:
+  - @anthropic-ai/sdk
+  - @vercel/node
+- src/mocks/index.ts was created to re-export mockConfig, mockRuntimeSequence, and mockClassifierResult.
+- tsconfig.api.json was added and referenced in tsconfig.json.
+- api/classify.ts was created and committed.
+- src/lib/classify.ts was created and committed.
+- The last visible commit was:
+  feat: classify client wrapper
+
+Need to continue from there.
+
+Your main remaining tasks:
+1. Verify the existing api/classify.ts compiles and follows the project rules.
+   - It should accept POST only.
+   - It should read ANTHROPIC_API_KEY from process.env.
+   - It should call Sonnet first, then Haiku fallback on failure/invalid JSON.
+   - It should return only a safe { tier, reasoning } result or clean error.
+   - It should never leak raw errors or API key.
+
+2. Verify src/lib/classify.ts.
+   - It should export classify(text): Promise<ClassifierResult>.
+   - It should POST to /api/classify.
+   - It should throw a clean ClassifyError on failure.
+   - It should be typed against src/types/classifier.ts.
+
+3. Build src/engine/escalationMachine.ts.
+   Requirements:
+   - Pure TypeScript, no React.
+   - Import types from src/types/escalation.ts.
+   - Input: EscalationConfig + SeverityTier.
+   - Walk the selected tier’s steps in order.
+   - Emit EscalationRuntimeEvent on start, every tick, timeout transitions, stop/completed, and 911-intent.
+   - Respect each step’s timeoutSeconds and onNoResponse.
+   - If step.type === "call_911", set runStatus to "at_911_intent". Do not perform any real action.
+   - No hardcoded flows. Use only the steps in config[tier].steps.
+   - Provide a small controller API such as start(), stop(), simulateResponse(), subscribe().
+   - Keep it framework-free and unit-testable.
+
+4. Add a simple test/harness if fast:
+   - src/engine/escalationMachine.test.ts or a simple dev harness file.
+   - Use mockConfig.
+   - Demonstrate major tier timing out through steps and reaching at_911_intent.
+   - Keep timers demo-friendly or allow tickMs override so tests are fast.
+
+5. Create .claude/skills/escalation-procedure/SKILL.md if missing.
+   It should document how escalation procedures are modeled and executed:
+   - EscalationConfig
+   - TierProcedure
+   - EscalationStep
+   - voice_call simulated
+   - contact simulated/timed step
+   - call_911 shown only
+   - onNoResponse: next_step or stop
+   - no hardcoded flows
+
+6. Run checks:
+   - npm run build
+   - npm run lint if available
+   - tsc checks if available
+
+7. Commit and push frequently.

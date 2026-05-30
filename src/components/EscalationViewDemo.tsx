@@ -122,7 +122,7 @@ export function EscalationViewDemo() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-lg mx-auto">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">EscalationView — dev demo</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">EscalationView - dev demo</h1>
         <p className="text-sm text-gray-500 mb-6">
           Animates a synthetic sequence for any tier. Wire to real engine events at Phase 2.
         </p>

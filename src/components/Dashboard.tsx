@@ -63,7 +63,7 @@ export default function Dashboard({
       <div>
         <h2 className="text-lg font-semibold text-slate-100">Incident Report</h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Describe what you're observing — Claude classifies the severity and shows its reasoning.
+          Describe what you're seeing. Claude will figure out how serious it is and explain why.
         </p>
       </div>
 
@@ -141,7 +141,7 @@ export default function Dashboard({
             </span>
           </div>
           <p className="text-sm leading-relaxed text-slate-200">
-            <span className="font-medium text-slate-300">AI Reasoning: </span>
+            <span className="font-medium text-slate-300">Why this tier: </span>
             {result.reasoning}
           </p>
           <div className="pt-1 border-t border-white/10">

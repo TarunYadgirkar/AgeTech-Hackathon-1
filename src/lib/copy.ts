@@ -9,9 +9,9 @@ export const TIER_LABEL: Record<SeverityTier, string> = {
 };
 
 export const TIER_DESCRIPTION: Record<SeverityTier, string> = {
-  minor:  'Routine deviation — gentle check-in',
-  medium: 'Concerning — multiple contacts notified',
-  major:  'Potential emergency — immediate escalation',
+  minor:  'Slightly off routine, just checking in',
+  medium: 'Something concerning, reaching out to contacts',
+  major:  'Potential emergency, responding right away',
 };
 
 // ── Step type labels ─────────────────────────────────────────────────────────
@@ -23,9 +23,9 @@ export const STEP_TYPE_LABEL: Record<StepType, string> = {
 };
 
 export const STEP_TYPE_DESCRIPTION: Record<StepType, string> = {
-  voice_call: 'AI voice agent calls the target (simulated)',
+  voice_call: 'AI voice agent calls the person (simulated)',
   contact:    'Send an alert to a named emergency contact',
-  call_911:   'Display 911 intent — emergency services shown, not dialed',
+  call_911:   'Shows 911 intent. Emergency services are displayed, never dialed.',
 };
 
 // ── Step runtime status labels ───────────────────────────────────────────────
@@ -42,9 +42,9 @@ export const STEP_STATUS_LABEL: Record<StepStatus, string> = {
 
 export const RUN_STATUS_LABEL: Record<RunStatus, string> = {
   idle:          'Ready',
-  running:       'Escalation in progress',
-  at_911_intent: '911 — Emergency services notified',
-  stopped:       'Escalation stopped',
+  running:       'Response in progress',
+  at_911_intent: '911 - Emergency services notified',
+  stopped:       'Response stopped',
   completed:     'Incident resolved',
 };
 
@@ -52,21 +52,21 @@ export const RUN_STATUS_LABEL: Record<RunStatus, string> = {
 
 export const ON_NO_RESPONSE_LABEL: Record<string, string> = {
   next_step: 'Continue to next step',
-  stop:      'Stop escalation',
+  stop:      'Stop here',
 };
 
 // ── 911 intent ───────────────────────────────────────────────────────────────
 
 export const CALL_911_LABEL = 'Calling 911';
 export const CALL_911_SUBLABEL = 'Emergency services have been notified';
-export const CALL_911_DISCLAIMER = 'Intent displayed — no real call is made';
+export const CALL_911_DISCLAIMER = 'Shown only. No real call is placed.';
 
 // ── Classifier panel ────────────────────────────────────────────────────────
 
 export const CLASSIFIER_PANEL = {
-  placeholder: 'Describe what\'s happening — e.g. "Margaret hasn\'t gotten out of bed and it\'s 1pm."',
-  submitLabel: 'Classify & escalate',
-  loadingLabel: 'Classifying…',
+  placeholder: 'Describe what\'s happening. For example: "Margaret hasn\'t gotten out of bed and it\'s 1pm."',
+  submitLabel: 'Classify and escalate',
+  loadingLabel: 'Classifying...',
   reasoningHeading: 'Why this tier?',
   errorLabel: 'Classification failed. Try again.',
 };
@@ -78,11 +78,11 @@ export const EDITOR = {
   removeStepLabel:    'Remove',
   moveUpLabel:        'Move up',
   moveDownLabel:      'Move down',
-  noStepsEmpty:       'No steps yet. Add a step to build the escalation procedure.',
-  targetPlaceholder:  'Contact name — e.g. "Daughter — Sarah"',
+  noStepsEmpty:       'No steps yet. Add one to build out the response.',
+  targetPlaceholder:  'Contact name, e.g. Sarah',
   timeoutLabel:       'Timeout (seconds)',
   onNoResponseLabel:  'If no response',
-  saveLabel:          'Save procedure',
+  saveLabel:          'Save',
   savedLabel:         'Saved',
 };
 
@@ -103,7 +103,7 @@ export const DEMO_SCENARIOS: ScenarioPreset[] = [
   {
     label: 'Skipped coffee',
     tier:  'minor',
-    text:  "Dad skipped his morning coffee again — second day in a row. He's been seeming a bit off.",
+    text:  "Dad skipped his morning coffee again. Second day in a row. He's been seeming a bit off.",
   },
   {
     label: 'Stayed in bed past noon',

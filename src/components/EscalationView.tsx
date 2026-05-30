@@ -87,9 +87,9 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
             }`}
           />
           <h2 className="text-lg font-semibold text-slate-100">
-            Live Escalation
+            Live Response
             <span className={`ml-2 text-sm font-medium ${TIER_COLOR[tier]}`}>
-              — {TIER_LABEL[tier]}
+              ({TIER_LABEL[tier]})
             </span>
           </h2>
         </div>
@@ -109,7 +109,7 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
           <p className="text-red-200 text-2xl font-black tracking-widest animate-pulse">
             ⚠ CALLING 911 ⚠
           </p>
-          <p className="text-red-400 text-sm">Intent state only — no real call is ever placed</p>
+          <p className="text-red-400 text-sm">Shown only. No real call is placed.</p>
         </div>
       )}
 
@@ -171,7 +171,7 @@ export default function EscalationView({ event, config, onRespond, onStop }: Pro
 
       {runStatus === 'completed' && (
         <div className="bg-emerald-950/60 border border-emerald-700 rounded-xl p-3 text-center">
-          <p className="text-emerald-300 text-sm font-medium">Incident resolved — escalation complete.</p>
+          <p className="text-emerald-300 text-sm font-medium">Incident resolved. Someone took ownership.</p>
         </div>
       )}
       {runStatus === 'stopped' && (

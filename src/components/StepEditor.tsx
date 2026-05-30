@@ -96,7 +96,7 @@ export default function StepEditor({ config, setConfig, focusTier }: Props) {
     <section className="bg-slate-900 border border-slate-700 rounded-2xl p-6 space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-slate-100">Escalation Procedure</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Configure the ordered steps for each severity tier. The engine runs them in sequence.</p>
+        <p className="text-xs text-slate-500 mt-0.5">Set up what happens at each severity level. Steps run in the order you put them.</p>
       </div>
 
       {/* Tier tabs */}
@@ -123,7 +123,7 @@ export default function StepEditor({ config, setConfig, focusTier }: Props) {
       <div className="space-y-2 min-h-16">
         {procedure.steps.length === 0 && (
           <p className="text-slate-500 text-sm text-center py-8 border border-dashed border-slate-700 rounded-xl">
-            No steps yet — add one below.
+            No steps yet. Add one below.
           </p>
         )}
         {procedure.steps.map((step, idx) => (
@@ -232,7 +232,7 @@ function StepRow({ step, index, total, onRemove, onMoveUp, onMoveDown, onUpdate 
         />
 
         {is911 ? (
-          <span className="text-xs text-red-400/80 font-medium whitespace-nowrap">intent only — never dials</span>
+          <span className="text-xs text-red-400/80 font-medium whitespace-nowrap">shown only, never dials</span>
         ) : (
           <>
             <div className="flex items-center gap-1 flex-shrink-0">

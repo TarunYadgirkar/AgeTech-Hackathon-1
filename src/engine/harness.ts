@@ -6,21 +6,21 @@ const fastConfig: EscalationConfig = {
     tier: 'minor',
     steps: [
       { id: 'minor_1', type: 'voice_call', target: 'Margaret', timeoutSeconds: 2, onNoResponse: 'next_step' },
-      { id: 'minor_2', type: 'contact', target: 'Daughter — Sarah', timeoutSeconds: 2, onNoResponse: 'stop' },
+      { id: 'minor_2', type: 'contact', target: 'Sarah (daughter)', timeoutSeconds: 2, onNoResponse: 'stop' },
     ],
   },
   medium: {
     tier: 'medium',
     steps: [
       { id: 'medium_1', type: 'voice_call', target: 'Margaret', timeoutSeconds: 2, onNoResponse: 'next_step' },
-      { id: 'medium_2', type: 'contact', target: 'Daughter — Sarah', timeoutSeconds: 2, onNoResponse: 'next_step' },
-      { id: 'medium_3', type: 'contact', target: 'Neighbor — Tom', timeoutSeconds: 2, onNoResponse: 'stop' },
+      { id: 'medium_2', type: 'contact', target: 'Sarah (daughter)', timeoutSeconds: 2, onNoResponse: 'next_step' },
+      { id: 'medium_3', type: 'contact', target: 'Tom (neighbor)', timeoutSeconds: 2, onNoResponse: 'stop' },
     ],
   },
   major: {
     tier: 'major',
     steps: [
-      { id: 'major_1', type: 'contact', target: 'Daughter — Sarah', timeoutSeconds: 2, onNoResponse: 'next_step' },
+      { id: 'major_1', type: 'contact', target: 'Sarah (daughter)', timeoutSeconds: 2, onNoResponse: 'next_step' },
       { id: 'major_2', type: 'voice_call', target: 'Margaret', timeoutSeconds: 2, onNoResponse: 'next_step' },
       { id: 'major_3', type: 'call_911', target: '911', timeoutSeconds: 0, onNoResponse: 'stop' },
     ],

@@ -39,8 +39,8 @@ export default function HeroSection() {
           </span>
         </div>
         <p className="text-slate-300 text-sm md:text-base max-w-2xl leading-relaxed">
-          Intelligent, <span className="text-white font-medium">user-configurable escalation</span> for elder-care events —
-          AI classifies the severity, then runs your procedure step by step until a human takes ownership.
+          Intelligent, <span className="text-white font-medium">configurable response</span> for elder-care events.
+          AI reads the situation, then follows your plan step by step until someone takes ownership.
         </p>
         <div className="flex flex-wrap gap-4 mt-5">
           <Pill color="emerald" label="Minor" desc="Gentle check-in" />
