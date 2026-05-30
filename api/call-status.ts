@@ -1,7 +1,15 @@
 import Retell from 'retell-sdk';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const NO_ANSWER_REASONS = new Set(['no_answer', 'voicemail_reach', 'line_error', 'user_busy']);
+const NO_ANSWER_REASONS = new Set([
+  'dial_no_answer',
+  'dial_busy',
+  'dial_failed',
+  'voicemail_reached',
+  'user_declined',
+  'invalid_destination',
+  'marked_as_spam',
+]);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -31,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       status = 'answered';
     } else if (call.call_status === 'ended') {
       status = disconnectReason && NO_ANSWER_REASONS.has(disconnectReason) ? 'no_answer' : 'ended';
-    } else if (call.call_status === 'error') {
+    } else if (call.call_status === 'error' || call.call_status === 'not_connected') {
       status = 'no_answer';
     } else {
       status = 'ringing';
