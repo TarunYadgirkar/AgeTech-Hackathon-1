@@ -16,7 +16,9 @@ export async function classify(text: string): Promise<ClassifierResult> {
   });
 
   if (!res.ok) {
-    throw new ClassifyError('classify request failed', res.status);
+    const body = await res.json().catch(() => ({})) as Record<string, unknown>;
+    const msg = typeof body.error === 'string' ? body.error : 'classify request failed';
+    throw new ClassifyError(msg, res.status);
   }
 
   return res.json() as Promise<ClassifierResult>;

@@ -18,6 +18,11 @@ const SYSTEM_PROMPT =
 
 const VALID_TIERS = new Set<string>(['minor', 'medium', 'major']);
 
+function isRateLimit(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota');
+}
+
 async function callModel(
   ai: GoogleGenAI,
   model: string,
@@ -59,15 +64,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   try {
-    const result = await callModel(ai, 'gemini-2.0-flash', text);
+    const result = await callModel(ai, 'gemini-1.5-flash', text);
     res.status(200).json(result);
   } catch (e1) {
     console.error('[classify] primary failed:', e1 instanceof Error ? e1.message : e1);
+    if (isRateLimit(e1)) {
+      res.status(429).json({ error: 'rate limited — try again in a moment' });
+      return;
+    }
     try {
-      const result = await callModel(ai, 'gemini-1.5-flash', text);
+      const result = await callModel(ai, 'gemini-1.5-flash-8b', text);
       res.status(200).json(result);
     } catch (e2) {
       console.error('[classify] fallback failed:', e2 instanceof Error ? e2.message : e2);
+      if (isRateLimit(e2)) {
+        res.status(429).json({ error: 'rate limited — try again in a moment' });
+        return;
+      }
       res.status(500).json({ error: 'classification failed' });
     }
   }
