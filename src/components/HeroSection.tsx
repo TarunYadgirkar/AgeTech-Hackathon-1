@@ -1,68 +1,155 @@
 import { lazy, Suspense } from 'react'
 
-const Spline = lazy(() => import('@splinetool/react-spline'))
+const SplineLazy = lazy(() => import('@splinetool/react-spline'))
+const SPLINE_URL = (import.meta.env.VITE_SPLINE_URL as string | undefined) ?? ''
 
-// Set this to a real Spline scene URL to enable the 3D hero
-const SPLINE_SCENE = ''
-
-export default function HeroSection() {
+function NetworkFallback() {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-b border-slate-800">
-      {SPLINE_SCENE && (
-        <Suspense fallback={null}>
-          <div className="absolute inset-0 opacity-50 pointer-events-none">
-            <Spline scene={SPLINE_SCENE} />
-          </div>
-        </Suspense>
-      )}
-
-      {/* Subtle grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-10 md:py-14">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 flex-shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">GuardianAlert</h1>
-          <span className="px-2.5 py-0.5 text-xs font-medium bg-slate-700/80 text-slate-300 rounded-full border border-slate-600 hidden sm:inline">
-            AgeTech SF 2026
-          </span>
-        </div>
-        <p className="text-slate-300 text-sm md:text-base max-w-2xl leading-relaxed">
-          Intelligent, <span className="text-white font-medium">configurable response</span> for elder-care events.
-          AI reads the situation, then follows your plan step by step until someone takes ownership.
-        </p>
-        <div className="flex flex-wrap gap-4 mt-5">
-          <Pill color="emerald" label="Minor" desc="Gentle check-in" />
-          <Pill color="amber" label="Medium" desc="Contact escalation" />
-          <Pill color="red" label="Major" desc="Emergency response" />
-        </div>
+    <div className="relative w-full h-full flex items-center justify-center select-none">
+      {/* Animated ping rings */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="rounded-full border border-blue-300 animate-ping"
+          style={{ width: 140, height: 140, animationDuration: '2s', opacity: 0.25 }}
+        />
       </div>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="rounded-full border border-amber-300 animate-ping"
+          style={{ width: 210, height: 210, animationDuration: '3s', opacity: 0.18 }}
+        />
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="rounded-full border border-red-300 animate-ping"
+          style={{ width: 290, height: 290, animationDuration: '4s', opacity: 0.12 }}
+        />
+      </div>
+
+      {/* Static SVG diagram */}
+      <svg viewBox="0 0 360 360" className="w-full h-full max-w-sm" xmlns="http://www.w3.org/2000/svg">
+        {/* Static severity rings */}
+        <circle cx="180" cy="180" r="65" fill="#eff6ff" stroke="#bfdbfe" strokeWidth="1" opacity="0.6" />
+        <circle cx="180" cy="180" r="100" fill="none" stroke="#fde68a" strokeWidth="0.75" opacity="0.5" />
+        <circle cx="180" cy="180" r="138" fill="none" stroke="#fecaca" strokeWidth="0.75" opacity="0.45" />
+
+        {/* Connection lines */}
+        <line x1="180" y1="180" x2="70" y2="70" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="5 4" />
+        <line x1="180" y1="180" x2="290" y2="70" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="5 4" />
+        <line x1="180" y1="180" x2="70" y2="290" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="5 4" />
+        <line x1="180" y1="180" x2="316" y2="180" stroke="#fca5a5" strokeWidth="1" strokeDasharray="5 4" />
+
+        {/* Center home node */}
+        <circle cx="180" cy="180" r="32" fill="#2563eb" />
+        {/* House: roof */}
+        <polygon points="180,160 200,178 160,178" fill="white" opacity="0.92" />
+        {/* House: walls */}
+        <rect x="164" y="178" width="32" height="19" rx="1" fill="white" opacity="0.92" />
+        {/* House: door */}
+        <rect x="175" y="186" width="10" height="11" rx="1" fill="#1d4ed8" opacity="0.55" />
+
+        {/* Caregiver — top left */}
+        <circle cx="70" cy="70" r="22" fill="white" stroke="#d1fae5" strokeWidth="2" />
+        <circle cx="70" cy="70" r="11" fill="#10b981" />
+        <text x="70" y="101" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Caregiver</text>
+
+        {/* Family — top right */}
+        <circle cx="290" cy="70" r="22" fill="white" stroke="#dbeafe" strokeWidth="2" />
+        <circle cx="290" cy="70" r="11" fill="#3b82f6" />
+        <text x="290" y="101" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Family</text>
+
+        {/* Neighbor — bottom left */}
+        <circle cx="70" cy="290" r="22" fill="white" stroke="#fef3c7" strokeWidth="2" />
+        <circle cx="70" cy="290" r="11" fill="#f59e0b" />
+        <text x="70" y="321" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Neighbor</text>
+
+        {/* Emergency — right */}
+        <circle cx="316" cy="180" r="22" fill="white" stroke="#fee2e2" strokeWidth="2" />
+        <circle cx="316" cy="180" r="11" fill="#ef4444" />
+        <text x="316" y="211" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="ui-sans-serif,system-ui,sans-serif">Emergency</text>
+
+        {/* Ring labels */}
+        <text x="222" y="124" fontSize="8" fill="#93c5fd" fontFamily="ui-sans-serif,system-ui,sans-serif" fontWeight="700" letterSpacing="1">MINOR</text>
+        <text x="248" y="90" fontSize="8" fill="#fcd34d" fontFamily="ui-sans-serif,system-ui,sans-serif" fontWeight="700" letterSpacing="1">MEDIUM</text>
+        <text x="265" y="52" fontSize="8" fill="#fca5a5" fontFamily="ui-sans-serif,system-ui,sans-serif" fontWeight="700" letterSpacing="1">MAJOR</text>
+      </svg>
     </div>
   )
 }
 
-function Pill({ color, label, desc }: { color: 'emerald' | 'amber' | 'red'; label: string; desc: string }) {
-  const styles = {
-    emerald: 'bg-emerald-950/60 border-emerald-800 text-emerald-300',
-    amber: 'bg-amber-950/60 border-amber-800 text-amber-300',
-    red: 'bg-red-950/60 border-red-800 text-red-300',
-  }
+interface Props {
+  onGoToDashboard: () => void
+  onGoToScenario: () => void
+}
+
+export default function HeroSection({ onGoToDashboard, onGoToScenario }: Props) {
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${styles[color]}`}>
-      <span className="font-semibold">{label}</span>
-      <span className="opacity-70">·</span>
-      <span className="opacity-70">{desc}</span>
-    </div>
+    <section id="hero" className="min-h-screen flex items-center pt-16 bg-white">
+      <div className="max-w-7xl mx-auto px-8 w-full py-20">
+        <div className="grid grid-cols-2 gap-16 items-center">
+          {/* Left */}
+          <div className="space-y-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-100 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-xs font-semibold text-red-600 tracking-wide uppercase">Elder-care escalation intelligence</span>
+            </div>
+
+            <div className="space-y-4">
+              <h1 className="text-[3.5rem] font-bold text-slate-900 leading-[1.1] tracking-tight">
+                Detection without
+                <br />
+                <span className="text-blue-600">response</span>{' '}
+                <span className="text-slate-400 font-normal">isn't</span>
+                <br />
+                <span className="text-slate-400 font-normal">safety.</span>
+              </h1>
+              <p className="text-lg text-slate-500 leading-relaxed max-w-md">
+                GuardianAlert closes the gap between a sensor flagging an event and a human confirming someone is safe. Automatically, with verified escalation.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onGoToDashboard}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              >
+                Open Dashboard
+              </button>
+              <button
+                onClick={onGoToScenario}
+                className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors"
+              >
+                See it in action →
+              </button>
+            </div>
+
+            {/* Mini stat strip */}
+            <div className="flex items-center gap-6 pt-2 border-t border-slate-100">
+              {[
+                { num: '28M', label: 'older adults living alone' },
+                { num: '3h+', label: 'avg. delay without automation' },
+                { num: '60%', label: 'fall victims wait alone' },
+              ].map(({ num, label }) => (
+                <div key={num}>
+                  <p className="text-lg font-bold text-slate-900">{num}</p>
+                  <p className="text-xs text-slate-400 leading-snug">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — Spline or fallback */}
+          <div className="h-[480px] relative">
+            {SPLINE_URL ? (
+              <Suspense fallback={<NetworkFallback />}>
+                <SplineLazy scene={SPLINE_URL} className="w-full h-full" />
+              </Suspense>
+            ) : (
+              <NetworkFallback />
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }

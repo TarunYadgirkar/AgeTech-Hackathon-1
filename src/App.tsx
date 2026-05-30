@@ -1,12 +1,15 @@
 import { useState, useRef } from 'react'
 import './App.css'
-import { mockConfig } from './mocks'
+import { mockConfig } from './types/escalation'
 import { classify } from './lib/classify'
+import { checkIn, notifyCall, pollCallResponse } from './lib/notify'
 import { runEscalation } from './engine/escalationMachine'
 import type { MachineHandle } from './engine/escalationMachine'
 import type { EscalationConfig, EscalationRuntimeEvent } from './types/escalation'
 import type { ClassifierResult } from './types/classifier'
+import Navbar from './components/Navbar'
 import HeroSection from './components/HeroSection'
+import OverviewPage from './components/OverviewPage'
 import Dashboard from './components/Dashboard'
 import StepEditor from './components/StepEditor'
 import EscalationView from './components/EscalationView'
@@ -19,12 +22,15 @@ export default function App() {
   const [classifyError, setClassifyError] = useState<string | null>(null)
   const [runtimeEvent, setRuntimeEvent] = useState<EscalationRuntimeEvent | null>(null)
   const machineRef = useRef<MachineHandle | null>(null)
+  const pollAbortRef = useRef<AbortController | null>(null)
 
   const isRunning =
     runtimeEvent !== null &&
     (runtimeEvent.runStatus === 'running' || runtimeEvent.runStatus === 'at_911_intent')
 
   function stopMachine() {
+    pollAbortRef.current?.abort()
+    pollAbortRef.current = null
     if (machineRef.current) {
       machineRef.current.stop()
       machineRef.current = null
@@ -32,16 +38,26 @@ export default function App() {
     setRuntimeEvent(null)
   }
 
-  async function handleClassify(text?: string) {
-    const input = (text ?? eventText).trim()
+  function handleScenarioSelect(text: string) {
+    setEventText(text)
+    stopMachine()
+    setResult(null)
+    setTimeout(() => {
+      document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' })
+    }, 50)
+  }
+
+  async function handleClassify() {
+    const input = eventText.trim()
     if (!input || classifying) return
-    if (text) setEventText(text)
     setClassifying(true)
     setClassifyError(null)
     setResult(null)
     stopMachine()
     try {
-      setResult(await classify(input))
+      const r = await classify(input)
+      setResult(r)
+      startEscalation(r, input)
     } catch (e) {
       setClassifyError(e instanceof Error ? e.message : 'Classification failed')
     } finally {
@@ -49,41 +65,92 @@ export default function App() {
     }
   }
 
-  function handleStartEscalation() {
-    if (!result) return
+  function startEscalation(r: ClassifierResult, incidentText: string) {
     stopMachine()
-    machineRef.current = runEscalation(config, result.tier, (ev) => setRuntimeEvent(ev))
+    const tier = r.tier
+    let lastFiredIndex: number | null = null
+    machineRef.current = runEscalation(config, tier, (ev) => {
+      setRuntimeEvent(ev)
+      if (ev.activeStepIndex !== null && ev.activeStepIndex !== lastFiredIndex) {
+        lastFiredIndex = ev.activeStepIndex
+        const step = config[tier].steps[ev.activeStepIndex]
+        if (step?.phoneNumber && step.type === 'voice_call') {
+          // Retell: AI check-in with the elder — poll to detect answer
+          const ac = new AbortController()
+          pollAbortRef.current?.abort()
+          pollAbortRef.current = ac
+          checkIn(step.phoneNumber, step.target, incidentText).then(call_id => {
+            if (call_id && !ac.signal.aborted) {
+              pollCallResponse(
+                call_id,
+                () => { if (!ac.signal.aborted) machineRef.current?.respond() },
+                () => { if (!ac.signal.aborted) machineRef.current?.advanceStep() },
+                ac.signal,
+              ).catch(console.error)
+            }
+          }).catch(console.error)
+        } else if (step?.phoneNumber && step.type === 'contact') {
+          // Twilio: notification call to escalation contact — let step timeout advance
+          notifyCall(step.phoneNumber, step.target, incidentText).catch(console.error)
+        }
+      }
+    })
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <HeroSection />
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-5">
-        <Dashboard
-          eventText={eventText}
-          setEventText={setEventText}
-          onClassify={() => handleClassify()}
-          onScenarioSelect={(text) => handleClassify(text)}
-          classifying={classifying}
-          classifyError={classifyError}
-          result={result}
-          onStartEscalation={handleStartEscalation}
-          isRunning={isRunning}
-        />
-        <StepEditor
-          config={config}
-          setConfig={setConfig}
-          focusTier={result?.tier ?? null}
-        />
-        {runtimeEvent && (
-          <EscalationView
-            event={runtimeEvent}
-            config={config}
-            onRespond={() => machineRef.current?.respond()}
-            onStop={stopMachine}
+    <div className="min-h-screen bg-slate-50">
+      <Navbar isRunning={isRunning} runStatus={runtimeEvent?.runStatus ?? null} />
+
+      <HeroSection
+        onGoToDashboard={() => document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' })}
+        onGoToScenario={() => document.getElementById('scenario')?.scrollIntoView({ behavior: 'smooth' })}
+      />
+
+      <OverviewPage onScenarioSelect={handleScenarioSelect} />
+
+      {/* Dashboard */}
+      <section id="dashboard" className="bg-slate-50 border-t border-slate-100 py-16">
+        <div className="max-w-7xl mx-auto px-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Caregiver Dashboard</p>
+              <h2 className="text-2xl font-bold text-slate-900">Incident Response</h2>
+              <p className="text-sm text-slate-400 mt-1">AI-assisted severity triage and escalation</p>
+            </div>
+            {isRunning && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-xs font-medium text-blue-700">Escalation in progress</span>
+              </div>
+            )}
+          </div>
+
+          <Dashboard
+            eventText={eventText}
+            setEventText={setEventText}
+            onClassify={handleClassify}
+            classifying={classifying}
+            classifyError={classifyError}
+            result={result}
+            isRunning={isRunning}
           />
-        )}
-      </main>
+
+          {runtimeEvent && (
+            <EscalationView
+              event={runtimeEvent}
+              config={config}
+              onRespond={() => machineRef.current?.respond()}
+              onStop={stopMachine}
+            />
+          )}
+
+          <StepEditor
+            config={config}
+            setConfig={setConfig}
+            focusTier={result?.tier ?? null}
+          />
+        </div>
+      </section>
     </div>
   )
 }

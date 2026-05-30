@@ -15,9 +15,9 @@ An intelligent, **user-configurable escalation layer** on top of elder-care dete
 - **App:** Vite + React + TypeScript + Tailwind, single-page
 - **Backend:** One Vercel serverless function (`api/classify.ts`) proxies the Claude API
 - **3D (optional):** Spline for lazy-loaded hero only; app must look good without it
-- **Models** (use full versioned strings — never bare aliases like `claude-sonnet`):
-  - Classifier: `claude-sonnet-4-6`
-  - Fallback: `claude-haiku-4-5-20251001`
+- **Models** (use exact model IDs):
+  - Classifier: `gemini-2.0-flash`
+  - Fallback: `gemini-2.0-flash-lite`
 
 ## Commands
 
@@ -38,15 +38,15 @@ An intelligent, **user-configurable escalation layer** on top of elder-care dete
 4. **Classifier reasoning must render on screen.** Every classification returns `{ tier, reasoning }`; the UI shows the reasoning, not just the label.
 5. **`voice_call` is simulated on day one.** No telephony. Treat it as a normal timed step.
 6. **Shared schema is frozen after Phase 0.** Don't change `src/types/*` without all owners agreeing — all tracks build against it.
-7. **Use full versioned model strings.** Never bare aliases like `claude-sonnet`.
-8. **No parallel subagents unless explicitly asked.** Single-threaded work only — billed against a personal $50 Anthropic balance.
+7. **Use exact model IDs.** `gemini-2.0-flash` and `gemini-1.5-flash`.
+8. **No parallel subagents unless explicitly asked.** Single-threaded work only.
 
 ---
 
 ## Cost guardrail
 
-- Prefer Haiku for cheap/iterative checks; reserve Sonnet for actual classifier behavior.
-- Keep classifier prompts tight; cap `max_tokens` modestly.
+- Prefer `gemini-2.0-flash-lite` for cheap/iterative checks; `gemini-2.0-flash` for actual classifier.
+- Keep prompts tight; cap `maxOutputTokens` modestly.
 
 ---
 

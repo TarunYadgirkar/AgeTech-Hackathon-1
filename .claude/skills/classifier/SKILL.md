@@ -14,9 +14,11 @@ if-statement.
 ## Where this runs
 
 - Called from the Vercel proxy `api/classify.ts`, never from the browser.
-- Model: `claude-sonnet-4-6` (better visible reasoning).
-- Fallback on error/timeout: `claude-haiku-4-5-20251001`.
-- Keep `max_tokens` modest; the reasoning should be 1–3 sentences.
+- SDK: `@google/genai`, env var: `GEMINI_API_KEY`.
+- Model: `gemini-2.0-flash` (primary).
+- Fallback on error: `gemini-1.5-flash`.
+- Keep `maxOutputTokens` modest; reasoning should be 1–3 sentences.
+- Use `responseMimeType: 'application/json'` to guarantee JSON output.
 
 ## Scope rule
 
