@@ -42,7 +42,9 @@ export default function App() {
     setResult(null)
     stopMachine()
     try {
-      setResult(await classify(input))
+      const r = await classify(input)
+      setResult(r)
+      startEscalation(r, input)
     } catch (e) {
       setClassifyError(e instanceof Error ? e.message : 'Classification failed')
     } finally {
@@ -50,11 +52,9 @@ export default function App() {
     }
   }
 
-  function handleStartEscalation() {
-    if (!result) return
-    const incidentText = eventText
-    const tier = result.tier
+  function startEscalation(r: ClassifierResult, incidentText: string) {
     stopMachine()
+    const tier = r.tier
     let lastFiredIndex: number | null = null
     machineRef.current = runEscalation(config, tier, (ev) => {
       setRuntimeEvent(ev)
@@ -81,7 +81,6 @@ export default function App() {
           classifying={classifying}
           classifyError={classifyError}
           result={result}
-          onStartEscalation={handleStartEscalation}
           isRunning={isRunning}
         />
         <StepEditor

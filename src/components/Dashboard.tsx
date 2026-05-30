@@ -28,18 +28,6 @@ const TIER_STYLES: Record<SeverityTier, {
   },
 }
 
-const SCENARIO_PILL: Record<SeverityTier, string> = {
-  minor:  'bg-emerald-950/50 border-emerald-800/60 text-emerald-300 hover:border-emerald-600 hover:bg-emerald-950',
-  medium: 'bg-amber-950/50  border-amber-800/60  text-amber-300  hover:border-amber-600  hover:bg-amber-950',
-  major:  'bg-red-950/50    border-red-800/60    text-red-300    hover:border-red-600    hover:bg-red-950',
-}
-
-const TIER_DOT: Record<SeverityTier, string> = {
-  minor: 'bg-emerald-400',
-  medium: 'bg-amber-400',
-  major: 'bg-red-400',
-}
-
 interface Props {
   eventText: string
   setEventText: (v: string) => void
@@ -48,13 +36,12 @@ interface Props {
   classifying: boolean
   classifyError: string | null
   result: ClassifierResult | null
-  onStartEscalation: () => void
   isRunning: boolean
 }
 
 export default function Dashboard({
   eventText, setEventText, onClassify, onScenarioSelect, classifying,
-  classifyError, result, onStartEscalation, isRunning,
+  classifyError, result, isRunning,
 }: Props) {
   const s = result ? TIER_STYLES[result.tier] : null
 
@@ -71,14 +58,13 @@ export default function Dashboard({
       <div className="space-y-2">
         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Try a scenario</p>
         <div className="flex flex-wrap gap-2">
-          {DEMO_SCENARIOS.map(({ label, tier, text }) => (
+          {DEMO_SCENARIOS.map(({ label, text }) => (
             <button
               key={label}
               onClick={() => onScenarioSelect(text)}
-              disabled={classifying}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-full transition-all disabled:opacity-40 ${SCENARIO_PILL[tier]}`}
+              disabled={classifying || isRunning}
+              className="px-3 py-1.5 text-xs font-medium border border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-100 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${TIER_DOT[tier]}`} />
               {label}
             </button>
           ))}
@@ -133,40 +119,25 @@ export default function Dashboard({
 
       {/* Classifier result */}
       {result && s && (
-        <div className={`${s.bg} border ${s.border} rounded-xl p-4 space-y-3`}>
+        <div className={`${s.bg} border ${s.border} rounded-xl p-4 space-y-2.5`}>
           <div className="flex items-center gap-2.5">
             <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${s.dot}`} />
             <span className={`text-xs font-bold uppercase tracking-widest ${s.text}`}>
               {s.label} Severity
             </span>
+            {isRunning && (
+              <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
+                <svg className="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="5" />
+                </svg>
+                Escalating…
+              </span>
+            )}
           </div>
           <p className="text-sm leading-relaxed text-slate-200">
             <span className="font-medium text-slate-300">AI Reasoning: </span>
             {result.reasoning}
           </p>
-          <div className="pt-1 border-t border-white/10">
-            <button
-              onClick={onStartEscalation}
-              disabled={isRunning}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/15 active:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              {isRunning ? (
-                <>
-                  <svg className="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="5" />
-                  </svg>
-                  Escalation Running…
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                  </svg>
-                  Start Escalation
-                </>
-              )}
-            </button>
-          </div>
         </div>
       )}
     </section>
