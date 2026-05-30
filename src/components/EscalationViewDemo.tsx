@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { EscalationView } from './EscalationView';
+import EscalationView from './EscalationView';
 import { mockConfig } from '../mocks';
 import type {
   EscalationRuntimeEvent,
@@ -144,7 +144,7 @@ export function EscalationViewDemo() {
           ))}
         </div>
 
-        <EscalationView procedure={mockConfig[tier]} event={event} />
+        <EscalationView event={event} config={mockConfig} onRespond={() => reset()} onStop={() => reset()} />
 
         {/* controls */}
         <div className="mt-6 flex gap-3">
