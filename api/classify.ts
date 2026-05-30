@@ -63,25 +63,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  try {
-    const result = await callModel(ai, 'gemini-2.0-flash', text);
-    res.status(200).json(result);
-  } catch (e1) {
-    console.error('[classify] primary failed:', e1 instanceof Error ? e1.message : e1);
-    if (isRateLimit(e1)) {
-      res.status(429).json({ error: 'rate limited — try again in a moment' });
-      return;
-    }
+  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+  let lastErr: unknown;
+  for (const model of models) {
     try {
-      const result = await callModel(ai, 'gemini-2.0-flash-lite', text);
+      const result = await callModel(ai, model, text);
       res.status(200).json(result);
-    } catch (e2) {
-      console.error('[classify] fallback failed:', e2 instanceof Error ? e2.message : e2);
-      if (isRateLimit(e2)) {
-        res.status(429).json({ error: 'rate limited — try again in a moment' });
-        return;
-      }
-      res.status(500).json({ error: 'classification failed' });
+      return;
+    } catch (e) {
+      lastErr = e;
+      console.error(`[classify] ${model} failed:`, e instanceof Error ? e.message : e);
+      if (isRateLimit(e)) continue;
+      break;
     }
+  }
+  if (isRateLimit(lastErr)) {
+    res.status(429).json({ error: 'rate limited — try again in a moment' });
+  } else {
+    res.status(500).json({ error: 'classification failed' });
   }
 }
