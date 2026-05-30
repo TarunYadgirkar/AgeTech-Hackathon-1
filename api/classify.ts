@@ -34,7 +34,6 @@ async function callModel(
     config: {
       systemInstruction: SYSTEM_PROMPT,
       maxOutputTokens: 512,
-      thinkingConfig: { thinkingBudget: 0 },
     },
   });
 
