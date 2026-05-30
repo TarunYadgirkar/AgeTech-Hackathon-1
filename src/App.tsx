@@ -16,20 +16,36 @@ import EscalationView from './components/EscalationView'
 
 type Page = 'landing' | 'dashboard'
 
+const CONFIG_KEY = 'ga_config_v1'
+
+function loadConfig(): EscalationConfig {
+  try {
+    const raw = localStorage.getItem(CONFIG_KEY)
+    if (raw) return JSON.parse(raw) as EscalationConfig
+  } catch {}
+  return mockConfig
+}
+
 export default function App() {
   const [page, setPage] = useState<Page>('landing')
-  const [config, setConfig] = useState<EscalationConfig>(mockConfig)
+  const [config, setConfig] = useState<EscalationConfig>(loadConfig)
   const [eventText, setEventText] = useState('')
   const [result, setResult] = useState<ClassifierResult | null>(null)
   const [classifying, setClassifying] = useState(false)
   const [classifyError, setClassifyError] = useState<string | null>(null)
   const [runtimeEvent, setRuntimeEvent] = useState<EscalationRuntimeEvent | null>(null)
+  const [callNotice, setCallNotice] = useState<{ ok: boolean; msg: string } | null>(null)
   const machineRef = useRef<MachineHandle | null>(null)
   const pollAbortRef = useRef<AbortController | null>(null)
 
   const isRunning =
     runtimeEvent !== null &&
     (runtimeEvent.runStatus === 'running' || runtimeEvent.runStatus === 'at_911_intent')
+
+  function updateConfig(c: EscalationConfig) {
+    setConfig(c)
+    try { localStorage.setItem(CONFIG_KEY, JSON.stringify(c)) } catch {}
+  }
 
   function stopMachine() {
     pollAbortRef.current?.abort()
@@ -39,6 +55,7 @@ export default function App() {
       machineRef.current = null
     }
     setRuntimeEvent(null)
+    setCallNotice(null)
   }
 
   function handleScenarioSelect(text: string) {
@@ -69,28 +86,51 @@ export default function App() {
   function startEscalation(r: ClassifierResult, incidentText: string) {
     stopMachine()
     const tier = r.tier
+    // Snapshot config at escalation start so phone numbers are locked in
+    const snapshot = config
     let lastFiredIndex: number | null = null
-    machineRef.current = runEscalation(config, tier, (ev) => {
+
+    machineRef.current = runEscalation(snapshot, tier, (ev) => {
       setRuntimeEvent(ev)
       if (ev.activeStepIndex !== null && ev.activeStepIndex !== lastFiredIndex) {
         lastFiredIndex = ev.activeStepIndex
-        const step = config[tier].steps[ev.activeStepIndex]
+        // Abort any previous call poll when advancing to a new step
+        pollAbortRef.current?.abort()
+        pollAbortRef.current = null
+
+        const step = snapshot[tier].steps[ev.activeStepIndex]
+
         if (step?.phoneNumber && step.type === 'voice_call') {
           const ac = new AbortController()
-          pollAbortRef.current?.abort()
           pollAbortRef.current = ac
-          checkIn(step.phoneNumber, step.target, incidentText).then(call_id => {
-            if (call_id && !ac.signal.aborted) {
+          setCallNotice(null)
+          checkIn(step.phoneNumber, step.target, incidentText)
+            .then(call_id => {
+              if (ac.signal.aborted) return
+              if (!call_id) {
+                setCallNotice({ ok: false, msg: 'Retell call failed — check RETELL_API_KEY, RETELL_AGENT_ID, RETELL_FROM_NUMBER on Vercel' })
+                return
+              }
+              setCallNotice({ ok: true, msg: `Calling ${step.target} (${step.phoneNumber}) via Retell…` })
               pollCallResponse(
                 call_id,
                 () => { if (!ac.signal.aborted) machineRef.current?.respond() },
                 () => { if (!ac.signal.aborted) machineRef.current?.advanceStep() },
                 ac.signal,
               ).catch(console.error)
-            }
-          }).catch(console.error)
+            })
+            .catch(err => {
+              if (!ac.signal.aborted)
+                setCallNotice({ ok: false, msg: `Retell error: ${err instanceof Error ? err.message : String(err)}` })
+            })
+
         } else if (step?.phoneNumber && step.type === 'contact') {
-          notifyCall(step.phoneNumber, step.target, incidentText).catch(console.error)
+          setCallNotice({ ok: true, msg: `Notifying ${step.target} (${step.phoneNumber}) via Twilio…` })
+          notifyCall(step.phoneNumber, step.target, incidentText)
+            .catch(err => setCallNotice({ ok: false, msg: `Twilio error: ${err instanceof Error ? err.message : String(err)}` }))
+
+        } else if (step && !step.phoneNumber && step.type !== 'call_911') {
+          setCallNotice({ ok: false, msg: `No phone number set for "${step.target}" — add one in the Escalation Procedure below` })
         }
       }
     })
@@ -149,9 +189,21 @@ export default function App() {
               />
             )}
 
+            {/* Live call status notice */}
+            {callNotice && (
+              <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm border ${
+                callNotice.ok
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-red-50 border-red-200 text-red-800'
+              }`}>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${callNotice.ok ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                {callNotice.msg}
+              </div>
+            )}
+
             <StepEditor
               config={config}
-              setConfig={setConfig}
+              setConfig={updateConfig}
               focusTier={result?.tier ?? null}
             />
           </div>

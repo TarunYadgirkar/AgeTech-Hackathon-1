@@ -323,15 +323,26 @@ function StepRow({ step, index, total, onRemove, onMoveUp, onMoveDown, onUpdate 
       </div>
 
       {!is911 && (
-        <div className="flex items-center gap-2 pl-8">
-          <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-          </svg>
+        <div className="pl-8 space-y-1">
+          <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            </svg>
+            Phone number
+            {step.phoneNumber
+              ? <span className="text-emerald-600 font-semibold">— live call will be placed</span>
+              : <span className="text-amber-600">— required to place a real call</span>
+            }
+          </p>
           <input
             value={step.phoneNumber ?? ''}
             onChange={e => onUpdate({ phoneNumber: e.target.value || undefined })}
-            placeholder="+14155551234, leave blank to skip"
-            className="flex-1 text-xs bg-white border border-slate-200 text-slate-600 placeholder-slate-400 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-400 min-w-0"
+            placeholder="+14155551234  (E.164 format)"
+            className={`w-full text-sm border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:border-blue-400 min-w-0 transition-colors ${
+              step.phoneNumber
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-900 focus:ring-emerald-500/15'
+                : 'bg-amber-50 border-amber-200 text-slate-800 placeholder-slate-400 focus:ring-blue-500/15'
+            }`}
           />
         </div>
       )}
