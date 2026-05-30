@@ -10,6 +10,31 @@ import {
   type TierProcedure,
 } from '../types/escalation'
 
+const RECOMMENDED: Record<SeverityTier, StepType[]> = {
+  minor:  ['voice_call', 'contact'],
+  medium: ['voice_call', 'contact', 'contact'],
+  major:  ['contact', 'voice_call', 'call_911'],
+}
+
+const RECOMMENDED_LABEL: Record<SeverityTier, string> = {
+  minor:  'AI Voice Call → Notify Contact',
+  medium: 'AI Voice Call → Notify Contact → Notify Contact',
+  major:  'Notify Contact → AI Voice Call → Call 911',
+}
+
+function matchesRecommended(steps: EscalationStep[], tier: SeverityTier): boolean {
+  const rec = RECOMMENDED[tier]
+  if (steps.length !== rec.length) return false
+  return steps.every((s, i) => s.type === rec[i])
+}
+
+function has911BeforeContact(steps: EscalationStep[]): boolean {
+  const i911 = steps.findIndex(s => s.type === 'call_911')
+  if (i911 < 0) return false
+  const hasContactBefore = steps.slice(0, i911).some(s => s.type === 'contact' || s.type === 'voice_call')
+  return !hasContactBefore && i911 < steps.length - 1
+}
+
 const TIER_LABELS: Record<SeverityTier, string> = { minor: 'Minor', medium: 'Medium', major: 'Major' }
 
 const TIER_TAB: Record<SeverityTier, { active: string; inactive: string; count: string }> = {
@@ -92,6 +117,9 @@ export default function StepEditor({ config, setConfig, focusTier }: Props) {
     })
   }
 
+  const deviates = procedure.steps.length > 0 && !matchesRecommended(procedure.steps, activeTier)
+  const earlyNineOneOne = has911BeforeContact(procedure.steps)
+
   return (
     <section className="bg-slate-900 border border-slate-700 rounded-2xl p-6 space-y-4">
       <div>
@@ -139,6 +167,38 @@ export default function StepEditor({ config, setConfig, focusTier }: Props) {
           />
         ))}
       </div>
+
+      {/* Order deviation warning */}
+      {deviates && !earlyNineOneOne && (
+        <div className="flex gap-3 bg-amber-950/40 border border-amber-700/50 rounded-xl px-4 py-3">
+          <svg className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-amber-300">Custom order — differs from recommendation</p>
+            <p className="text-xs text-amber-400/80">
+              Recommended for <span className="font-medium capitalize">{activeTier}</span>: {RECOMMENDED_LABEL[activeTier]}.
+              You can keep your order, but unnecessary contacts may cause alert fatigue.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Early 911 warning */}
+      {earlyNineOneOne && (
+        <div className="flex gap-3 bg-red-950/50 border border-red-700/60 rounded-xl px-4 py-3">
+          <svg className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-red-300">911 placed before human contacts</p>
+            <p className="text-xs text-red-400/80">
+              We strongly recommend attempting at least one voice call or contact notification before escalating to 911.
+              Premature 911 calls may dispatch emergency services unnecessarily — which can delay help for real emergencies elsewhere.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Add step button */}
       <button

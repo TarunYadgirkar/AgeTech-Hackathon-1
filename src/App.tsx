@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import './App.css'
 import { mockConfig } from './mocks'
 import { classify } from './lib/classify'
-import { notifyCall } from './lib/notify'
+import { notifyCall, pollCallResponse } from './lib/notify'
 import { runEscalation } from './engine/escalationMachine'
 import type { MachineHandle } from './engine/escalationMachine'
 import type { EscalationConfig, EscalationRuntimeEvent } from './types/escalation'
@@ -20,12 +20,15 @@ export default function App() {
   const [classifyError, setClassifyError] = useState<string | null>(null)
   const [runtimeEvent, setRuntimeEvent] = useState<EscalationRuntimeEvent | null>(null)
   const machineRef = useRef<MachineHandle | null>(null)
+  const pollAbortRef = useRef<AbortController | null>(null)
 
   const isRunning =
     runtimeEvent !== null &&
     (runtimeEvent.runStatus === 'running' || runtimeEvent.runStatus === 'at_911_intent')
 
   function stopMachine() {
+    pollAbortRef.current?.abort()
+    pollAbortRef.current = null
     if (machineRef.current) {
       machineRef.current.stop()
       machineRef.current = null
@@ -63,7 +66,16 @@ export default function App() {
         const step = config[tier].steps[ev.activeStepIndex]
         if (step?.phoneNumber && (step.type === 'voice_call' || step.type === 'contact')) {
           const msg = `Elder care alert. ${step.target} is being contacted. Incident: ${incidentText}. Please respond immediately.`
-          notifyCall(step.phoneNumber, msg).catch(console.error)
+          const ac = new AbortController()
+          pollAbortRef.current?.abort()
+          pollAbortRef.current = ac
+          notifyCall(step.phoneNumber, msg).then(sid => {
+            if (sid && !ac.signal.aborted) {
+              pollCallResponse(sid, () => {
+                if (!ac.signal.aborted) machineRef.current?.respond()
+              }, ac.signal).catch(console.error)
+            }
+          }).catch(console.error)
         }
       }
     })
