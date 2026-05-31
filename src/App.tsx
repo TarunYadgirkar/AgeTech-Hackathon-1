@@ -156,6 +156,16 @@ export default function App() {
       ) : (
         <section className="pt-24 pb-16 bg-slate-50 min-h-screen">
           <div className="max-w-7xl mx-auto px-8 space-y-6">
+            {/* Trial notice */}
+            <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <p className="text-sm text-amber-700">
+                <span className="font-semibold">Calls are currently disabled</span> — Retell AI and Twilio free trial limits reached. AI classification and escalation logic still fully functional.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between pt-4">
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Caregiver Dashboard</p>

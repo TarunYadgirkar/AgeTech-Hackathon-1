@@ -35,6 +35,7 @@ export default function Navbar({ isRunning, runStatus, page, onNavigate }: Props
             <>
               {[
                 { label: 'Problem', id: 'problem' },
+                { label: 'Stats', id: 'stats' },
                 { label: 'How it works', id: 'scenario' },
               ].map(({ label, id }) => (
                 <button
