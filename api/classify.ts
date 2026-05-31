@@ -98,7 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+  const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
   let lastErr: unknown;
   for (const model of models) {
     try {
@@ -108,10 +108,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     } catch (e) {
       lastErr = e;
-      console.error(`[classify] ${model} failed:`, e instanceof Error ? e.message : e);
+      console.error(`[classify] ${model} failed:`, e instanceof Error ? `${e.name}: ${e.message}` : String(e));
     }
   }
   const fallback = keywordFallback(text);
   logIncident(text, fallback.tier, fallback.reasoning).catch(() => {});
-  res.status(200).json(fallback);
+  res.status(200).json({ ...fallback, _debug_err: lastErr instanceof Error ? `${lastErr.name}: ${lastErr.message?.slice(0, 300)}` : String(lastErr).slice(0, 300) });
 }
